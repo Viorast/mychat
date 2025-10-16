@@ -1,151 +1,147 @@
-/**
- * Enhanced Gemini API Route dengan Real AI Responses
- * Mendukung streaming dan non-streaming responses
- */
-
+// app/api/gemini/stream/route.js - FIXED VERSION
 import { NextResponse } from 'next/server';
-import { geminiClient } from '../../../../lib/gemini/client';
-import { handleStreamingResponse } from '../../../../lib/gemini/stream';
 import { memoryStorage } from '../../../../lib/storage/memory';
+import { geminiClient } from '../../../../lib/gemini/client';
 
 export async function POST(request) {
+  let chatId = 'default-chat';
+  
   try {
-    const body = await request.json();
-    const { message, chatId, updateTitle = false, stream = false } = body;
+    const { message, chatId: requestChatId, updateTitle = false } = await request.json();
 
-    // Validasi input
     if (!message?.trim()) {
       return NextResponse.json(
-        { error: 'Pesan tidak boleh kosong' },
+        { error: 'Message is required' },
         { status: 400 }
       );
     }
 
-    if (!geminiClient) {
-      return NextResponse.json(
-        { 
-          success: false,
-          error: 'Gemini AI tidak tersedia. Periksa GEMINI_API_KEY di file .env' 
-        },
-        { status: 500 }
-      );
-    }
-
-    console.log(`💬 Processing message for chat ${chatId}:`, message.substring(0, 100) + '...');
-
-    // ✅ Auto-generate chat title jika diperlukan
-    if (updateTitle) {
-      const chat = await memoryStorage.getChatById(chatId);
-      if (chat && (chat.title === 'New Chat' || chat.title === 'New Chat...')) {
-        const newTitle = message.length > 30 ? message.substring(0, 30) + '...' : message;
-        await memoryStorage.updateChat(chatId, { title: newTitle });
-        console.log(`📝 Updated chat title to: ${newTitle}`);
-      }
-    }
+    chatId = requestChatId || chatId;
+    console.log('🔍 Processing stream request:', { message: message.substring(0, 50), chatId, updateTitle });
 
     // Simpan pesan user ke storage
-    const userMessage = await memoryStorage.addMessage(chatId, {
+    const userMessage = await memoryStorage.addMessageToChat(chatId, {
       content: message.trim(),
-      role: 'user'
+      role: 'user',
+      timestamp: new Date()
     });
 
-    console.log('✅ User message saved');
+    console.log('✅ User message saved:', userMessage.id);
 
-    // Handle streaming request
-    if (stream) {
-      console.log('🌊 Starting streaming response...');
-      
-      const streamResult = await geminiClient.generateStream(message);
-      
-      if (!streamResult.success) {
-        throw new Error(streamResult.error || 'Streaming failed');
-      }
-
-      // Simpan AI message setelah streaming selesai (akan dihandle di frontend)
-      return await handleStreamingResponse(streamResult);
-    }
-
-    // Handle non-streaming request (default)
-    console.log('🤖 Generating AI response...');
-    const aiResponse = await geminiClient.generateResponse(message);
+    // Generate response dari Gemini (non-streaming untuk simplicity)
+    const aiResponse = await geminiClient.generateResponse(message.trim());
     
     if (!aiResponse.success) {
-      console.error('❌ AI response failed:', aiResponse.error);
-      throw new Error(aiResponse.error || 'AI response failed');
+      throw new Error('Failed to generate AI response');
     }
 
-    console.log('✅ AI response generated:', aiResponse.text.substring(0, 100) + '...');
+    const assistantContent = aiResponse.text;
 
-    // Simpan pesan AI ke storage
-    const assistantMessage = await memoryStorage.addMessage(chatId, {
-      content: aiResponse.text,
-      role: 'assistant'
+    // Simpan response AI ke storage
+    const assistantMessage = await memoryStorage.addMessageToChat(chatId, {
+      content: assistantContent,
+      role: 'assistant',
+      timestamp: new Date(),
+      isStreamed: false
     });
 
-    console.log('✅ Assistant message saved');
+    console.log('✅ Assistant message saved:', assistantMessage.id);
 
+    // ✅ FIXED: Auto-generate chat title jika diperlukan
+    let updatedChat = null;
+    if (updateTitle) {
+      try {
+        const currentChat = await memoryStorage.getChatById(chatId);
+        if (currentChat && (currentChat.title === 'New Chat' || currentChat.title === 'New Chat...')) {
+          // Generate title dari pesan pertama (maksimal 30 karakter)
+          const newTitle = message.trim().substring(0, 30) + (message.length > 30 ? '...' : '');
+          updatedChat = await memoryStorage.updateChat(chatId, {
+            title: newTitle
+          });
+          console.log('✅ Chat title updated:', newTitle);
+        }
+      } catch (titleError) {
+        console.warn('⚠️ Failed to update chat title:', titleError);
+        // Jangan throw error untuk title update failure
+      }
+    }
+
+    // ✅ FIXED: Return JSON response yang konsisten
     return NextResponse.json({
       success: true,
       data: {
-        userMessage,
-        assistantMessage,
-        usage: aiResponse.usage
+        assistantMessage: {
+          id: assistantMessage.id,
+          content: assistantContent,
+          role: 'assistant',
+          timestamp: assistantMessage.timestamp,
+          chatId: chatId
+        },
+        userMessage: {
+          id: userMessage.id,
+          content: message.trim(),
+          role: 'user', 
+          timestamp: userMessage.timestamp,
+          chatId: chatId
+        },
+        updatedChat: updatedChat
       },
-      isDemo: false,
-      message: 'Response generated successfully'
+      message: 'Message processed successfully'
     });
 
   } catch (error) {
-    console.error('❌ Gemini API error:', error);
+    console.error('❌ Gemini stream error:', error);
     
     // Fallback response
-    const fallbackResponse = {
-      success: false,
-      error: error.message,
-      data: {
-        userMessage: null,
-        assistantMessage: {
-          id: `ai-${Date.now()}`,
-          content: 'Maaf, saya mengalami kendala sementara. Silakan coba lagi dalam beberapa saat.',
-          role: 'assistant',
-          timestamp: new Date().toISOString(),
-          isError: true
-        }
+    const fallbackResponse = "Maaf, terjadi kesalahan saat memproses permintaan Anda. Silakan coba lagi.";
+
+    // Simpan fallback message
+    try {
+      await memoryStorage.addMessageToChat(chatId, {
+        content: fallbackResponse,
+        role: 'assistant',
+        timestamp: new Date(),
+        isError: true
+      });
+    } catch (storageError) {
+      console.error('❌ Failed to save error message:', storageError);
+    }
+
+    return NextResponse.json(
+      { 
+        success: false,
+        error: 'Stream processing failed',
+        message: fallbackResponse,
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
       },
-      isDemo: false
-    };
+      { status: 500 }
+    );
+  }
+}
+
+// GET endpoint untuk testing
+export async function GET(request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const chatId = searchParams.get('chatId') || 'default-chat';
     
-    return NextResponse.json(fallbackResponse, { status: 500 });
-  }
-}
-
-// Health check endpoint
-export async function GET() {
-  if (!geminiClient) {
+    const messages = await memoryStorage.getMessagesByChat(chatId);
+    
     return NextResponse.json({
-      status: 'error',
-      message: 'Gemini client not initialized. Check GEMINI_API_KEY.'
-    }, { status: 500 });
+      success: true,
+      data: messages,
+      count: messages.length,
+    });
+    
+  } catch (error) {
+    console.error('GET /api/gemini/stream error:', error);
+    return NextResponse.json(
+      { 
+        success: false,
+        error: 'Failed to fetch messages',
+        details: error.message 
+      },
+      { status: 500 }
+    );
   }
-
-  const testResult = await geminiClient.testConnection();
-  
-  return NextResponse.json({
-    status: testResult.connected ? 'healthy' : 'error',
-    connected: testResult.connected,
-    message: testResult.connected ? 'Gemini AI is connected and working' : testResult.error,
-    timestamp: new Date().toISOString()
-  });
-}
-
-// Support CORS
-export async function OPTIONS() {
-  return new Response(null, {
-    status: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    },
-  });
 }
