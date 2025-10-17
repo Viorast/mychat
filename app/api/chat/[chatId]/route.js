@@ -12,41 +12,34 @@ import { memoryStorage } from '../../../../lib/storage/memory';
  */
 export async function GET(request, { params }) {
   try {
-    // ✅ FIXED: Await params sebelum digunakan
-    const { chatId } = await params;
+    const { chatId } = params;
 
-    // Validasi chatId
     if (!chatId || chatId === 'undefined' || chatId === 'null') {
-      return NextResponse.json(
-        { error: 'Chat ID is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Chat ID is required' }, { status: 400 });
     }
 
     console.log(`📖 Fetching chat with ID: ${chatId}`);
 
+    // Ambil data chat dan messages secara terpisah
     const chat = await memoryStorage.getChatById(chatId);
+    const messages = await memoryStorage.getMessagesByChat(chatId);
 
     if (!chat) {
-      return NextResponse.json(
-        { error: 'Chat not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Chat not found' }, { status: 404 });
     }
+
+    // Gabungkan keduanya sebelum dikirim ke frontend
+    const chatWithMessages = { ...chat, messages: messages || [] };
 
     return NextResponse.json({
       success: true,
-      data: chat,
+      data: chatWithMessages, // Kirim objek yang sudah digabung
     });
-    
+
   } catch (error) {
     console.error(`GET /api/chat/[chatId] error:`, error);
     return NextResponse.json(
-      { 
-        success: false,
-        error: 'Failed to fetch chat',
-        details: error.message 
-      },
+      { success: false, error: 'Failed to fetch chat', details: error.message },
       { status: 500 }
     );
   }

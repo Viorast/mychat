@@ -132,7 +132,7 @@ async function handleChatMessage(message, chatId, userId) {
           );
         } else if (queryResults.length > 0) {
           // Simple template replacement untuk direct responses
-          finalResponse = queryService.generateFallbackAnalysis(
+          finalResponse = await queryService.generateFallbackAnalysis(
             queryResults, 
             aiResponse.text_template || aiResponse.message
           );
