@@ -26,7 +26,7 @@ export async function POST(request) {
       timestamp: new Date()
     });
 
-    console.log('✅ User message saved:', userMessage.id);
+    console.log('User message saved:', userMessage.id);
 
     // Generate response dari Gemini (non-streaming untuk simplicity)
     const aiResponse = await geminiClient.generateResponse(message.trim());
@@ -45,9 +45,9 @@ export async function POST(request) {
       isStreamed: false
     });
 
-    console.log('✅ Assistant message saved:', assistantMessage.id);
+    console.log('Assistant message saved:', assistantMessage.id);
 
-    // ✅ FIXED: Auto-generate chat title jika diperlukan
+    // FIXED: Auto-generate chat title jika diperlukan
     let updatedChat = null;
     if (updateTitle) {
       try {
@@ -58,7 +58,7 @@ export async function POST(request) {
           updatedChat = await memoryStorage.updateChat(chatId, {
             title: newTitle
           });
-          console.log('✅ Chat title updated:', newTitle);
+          console.log('Chat title updated:', newTitle);
         }
       } catch (titleError) {
         console.warn('⚠️ Failed to update chat title:', titleError);
@@ -66,7 +66,7 @@ export async function POST(request) {
       }
     }
 
-    // ✅ FIXED: Return JSON response yang konsisten
+    // FIXED: Return JSON response yang konsisten
     return NextResponse.json({
       success: true,
       data: {
@@ -90,7 +90,7 @@ export async function POST(request) {
     });
 
   } catch (error) {
-    console.error('❌ Gemini stream error:', error);
+    console.error('Gemini stream error:', error);
     
     // Fallback response
     const fallbackResponse = "Maaf, terjadi kesalahan saat memproses permintaan Anda. Silakan coba lagi.";
@@ -104,7 +104,7 @@ export async function POST(request) {
         isError: true
       });
     } catch (storageError) {
-      console.error('❌ Failed to save error message:', storageError);
+      console.error('Failed to save error message:', storageError);
     }
 
     return NextResponse.json(

@@ -1,6 +1,6 @@
 /**
  * Fixed Sidebar dengan Better Error Handling
- * ✅ FIXED: Handle chat creation errors dengan graceful degradation
+ * FIXED: Handle chat creation errors dengan graceful degradation
  */
 
 'use client'
@@ -47,7 +47,7 @@ export default function Sidebar() {
   }, [chats]);
 
   /**
-   * Handle new chat creation - ✅ FIXED: Better error handling
+   * Handle new chat creation - FIXED: Better error handling
    */
   const handleNewChat = async () => {
     if (isCreatingChat) return; // Prevent multiple clicks
@@ -59,7 +59,7 @@ export default function Sidebar() {
       const newChat = await createChat();
       
       if (newChat) {
-        // ✅ FIXED: Tidak perlu call selectChat lagi karena sudah dihandle di createChat
+        // FIXED: Tidak perlu call selectChat lagi karena sudah dihandle di createChat
         console.log('New chat created successfully:', newChat.id);
         
         // Auto-close sidebar on mobile setelah memilih chat
@@ -76,7 +76,7 @@ export default function Sidebar() {
   };
 
   /**
-   * Handle chat selection - ✅ FIXED: Better error handling
+   * Handle chat selection - FIXED: Better error handling
    */
   const handleSelectChat = async (chat) => {
     try {

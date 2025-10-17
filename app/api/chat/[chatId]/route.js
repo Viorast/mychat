@@ -1,6 +1,5 @@
 /**
  * Fixed Chat API Route dengan Dynamic Params Handling
- * Memperbaiki issue params.chatId yang harus di-await
  */
 
 import { NextResponse } from 'next/server';
@@ -8,11 +7,10 @@ import { memoryStorage } from '../../../../lib/storage/memory';
 
 /**
  * GET /api/chat/[chatId] - Get specific chat dengan messages
- * ✅ FIXED: params harus di-await sebelum digunakan
  */
 export async function GET(request, { params }) {
   try {
-    const { chatId } = params;
+    const { chatId } = params; // ✅ FIXED: Langsung destructuring tanpa await
 
     if (!chatId || chatId === 'undefined' || chatId === 'null') {
       return NextResponse.json({ error: 'Chat ID is required' }, { status: 400 });
@@ -20,7 +18,6 @@ export async function GET(request, { params }) {
 
     console.log(`📖 Fetching chat with ID: ${chatId}`);
 
-    // Ambil data chat dan messages secara terpisah
     const chat = await memoryStorage.getChatById(chatId);
     const messages = await memoryStorage.getMessagesByChat(chatId);
 
@@ -28,12 +25,11 @@ export async function GET(request, { params }) {
       return NextResponse.json({ error: 'Chat not found' }, { status: 404 });
     }
 
-    // Gabungkan keduanya sebelum dikirim ke frontend
     const chatWithMessages = { ...chat, messages: messages || [] };
 
     return NextResponse.json({
       success: true,
-      data: chatWithMessages, // Kirim objek yang sudah digabung
+      data: chatWithMessages,
     });
 
   } catch (error) {
@@ -45,16 +41,56 @@ export async function GET(request, { params }) {
   }
 }
 
+export async function PUT(request, { params }) {
+  try {
+    const { chatId } = params;
+    const body = await request.json();
+    const { title } = body;
+
+    if (!title?.trim()) {
+      return NextResponse.json(
+        { success: false, error: 'Chat title is required' },
+        { status: 400 }
+      );
+    }
+
+    const updatedChat = await memoryStorage.updateChat(chatId, {
+      title: title.trim(),
+    });
+
+    if (!updatedChat) {
+      return NextResponse.json(
+        { success: false, error: 'Chat not found' },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      data: updatedChat,
+      message: 'Chat title updated successfully',
+    });
+    
+  } catch (error) {
+    console.error(`PUT /api/chat/${params.chatId} error:`, error);
+    return NextResponse.json(
+      { 
+        success: false,
+        error: 'Failed to update chat',
+        details: error.message 
+      },
+      { status: 500 }
+    );
+  }
+}
+
 /**
  * DELETE /api/chat/[chatId] - Delete chat
- * ✅ FIXED: params harus di-await sebelum digunakan
  */
 export async function DELETE(request, { params }) {
   try {
-    // ✅ FIXED: Await params sebelum digunakan
-    const { chatId } = await params;
+    const { chatId } = params; // ✅ FIXED: Langsung destructuring tanpa await
 
-    // Validasi chatId
     if (!chatId || chatId === 'undefined' || chatId === 'null') {
       return NextResponse.json(
         { error: 'Chat ID is required' },
@@ -63,7 +99,6 @@ export async function DELETE(request, { params }) {
     }
 
     console.log(`🗑️ Deleting chat with ID: ${chatId}`);
-
     await memoryStorage.deleteChat(chatId);
 
     return NextResponse.json({

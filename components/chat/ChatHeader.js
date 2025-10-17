@@ -1,40 +1,33 @@
-/**
- * Fixed ChatHeader Component
- * Menghapus updateChatTitle yang tidak diperlukan karena title sudah auto-update
- */
-
+// components/chat/ChatHeader.js - UPDATED FOR SAVING TITLE
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Button from '../ui/Button'
+import { useChat } from '../../lib/hooks/useChat';
 
 export default function ChatHeader({ chat, connectionStatus = 'connected' }) {
   const [isEditing, setIsEditing] = useState(false)
   const [editedTitle, setEditedTitle] = useState(chat?.title || 'New Chat')
+  const { updateChatTitle } = useChat();
 
-  /**
-   * Handle save judul chat yang diedit
-   * ✅ FIXED: Tidak perlu updateChatTitle karena title sudah auto-update dari pesan pertama
-   */
-  const handleSaveTitle = () => {
-    // ✅ FIXED: Simpan langsung ke state local, tidak perlu API call
-    setIsEditing(false)
-    
-    // Note: Title akan terupdate otomatis ketika user mengirim pesan pertama
-    console.log('Title updated locally:', editedTitle.trim())
+  useEffect(() => {
+    if (chat?.title) {
+      setEditedTitle(chat.title);
+    }
+  }, [chat?.title]);
+
+  const handleSaveTitle = async () => {
+    if (chat && editedTitle.trim() !== chat.title) {
+        await updateChatTitle(chat.id, editedTitle.trim());
+    }
+    setIsEditing(false);
   }
 
-  /**
-   * Handle cancel edit judul
-   */
   const handleCancelEdit = () => {
     setEditedTitle(chat?.title || 'New Chat')
     setIsEditing(false)
   }
 
-  /**
-   * Handle key press pada input edit
-   */
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') {
       handleSaveTitle()
