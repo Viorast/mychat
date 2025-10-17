@@ -91,65 +91,80 @@ export async function POST(request) {
  * Handle chat message processing (n8n workflow simulation) with STREAMING
  * Ini adalah fungsi helper, tidak diekspor
  */
-async function handleChatMessage(message, chatId, userId) {
+async function handleChatMessage(message, chatId, userId) { 
+  const createStreamFromText = (text) => {
+    const stream = new ReadableStream({
+      start(controller) {
+        const encoder = new TextEncoder();
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'start' })}\n\n`));
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'chunk', content: text })}\n\n`));
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'complete' })}\n\n`));
+        controller.close();
+      }
+    });
+    return new Response(stream, {
+      headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' }
+    });
+  };
+
   try {
     console.log('💬 Processing user query:', message);
 
-    // Step 1: Simpan pesan pengguna
     await memoryStorage.addMessageToChat(chatId, { role: 'user', content: message });
 
-    // Step 2: Auto-update judul jika ini pesan pertama
     const currentChat = await memoryStorage.getChatById(chatId);
     if (currentChat && (currentChat.title === 'New Chat' || currentChat.title === 'New Chat...')) {
         const newTitle = message.trim().substring(0, 30) + (message.length > 30 ? '...' : '');
         await memoryStorage.updateChat(chatId, { title: newTitle });
     }
 
-    // Step 3: Dapatkan Skema Database
     const schema = await schemaService.getFullSchema();
-    console.log('🔍 Schema loaded');
-
-    // Step 4: Generate SQL Query dengan AI (tidak streaming)
     const aiResponse = await queryService.generateSQLQuery(message, schema);
     console.log('🤖 AI Response (SQL Gen):', aiResponse);
 
-    let finalPromptForStreaming;
-    let fullResponseForStorage = "";
-
-    // Step 5: Eksekusi Query jika diperlukan
     if (aiResponse.needs_query_execution && aiResponse.query) {
-      const validation = queryExecutor.validateQuery(aiResponse.query);
-      if (!validation.valid) throw new Error(validation.error);
+      let result;
+      try {
+        // ✅ Bungkus eksekusi query dalam try...catch sendiri
+        const validation = queryExecutor.validateQuery(aiResponse.query);
+        if (!validation.valid) throw new Error(validation.error);
+        
+        result = await queryExecutor.executeQuery(aiResponse.query);
+        if (!result.success) throw new Error(result.error);
 
-      const result = await queryExecutor.executeQuery(aiResponse.query);
-      if (!result.success) throw new Error(result.error);
+      } catch (dbError) {
+        console.error('❌ Database Execution Error:', dbError.message);
+        const userFriendlyError = "Maaf, saya mengalami sedikit kendala saat mencoba mengambil data. Mungkin informasi yang Anda minta tidak tersedia atau ada kesalahan internal. Silakan coba pertanyaan lain.";
+        await memoryStorage.addMessageToChat(chatId, { role: 'assistant', content: userFriendlyError, isError: true });
+        return createStreamFromText(userFriendlyError);
+      }
+      
+      let finalPromptForStreaming;
+      let fullResponseForStorage = "";
 
       if (result.rows.length > 0) {
-        finalPromptForStreaming = `Berdasarkan pertanyaan "${message}", dan data berikut:\n${JSON.stringify(result.rows, null, 2)}\n\nBerikan jawaban dalam bahasa natural.`;
+        finalPromptForStreaming = `Berdasarkan pertanyaan "${message}", dan data berikut:\n${JSON.stringify(result.rows, null, 2)}\n\nBerikan jawaban dalam bahasa natural yang mudah dimengerti.`;
         fullResponseForStorage = await queryService.analyzeQueryResults(message, result.rows, aiResponse.text_template);
       } else {
         fullResponseForStorage = 'Tidak ada data yang ditemukan dengan kriteria tersebut.';
         finalPromptForStreaming = `Jawab dengan sopan bahwa tidak ada data yang ditemukan untuk pertanyaan: "${message}"`;
       }
+      
+      await memoryStorage.addMessageToChat(chatId, { role: 'assistant', content: fullResponseForStorage });
+      const geminiResult = await geminiClient.generateStream(finalPromptForStreaming);
+      return handleStreamingResponse(geminiResult);
+
     } else {
-      fullResponseForStorage = aiResponse.message;
-      finalPromptForStreaming = fullResponseForStorage; // Langsung stream pesan dari AI jika tidak ada query
+      // Alur jika TIDAK perlu query (sapaan, di luar konteks, dll.)
+      const finalMessage = aiResponse.message;
+      await memoryStorage.addMessageToChat(chatId, { role: 'assistant', content: finalMessage });
+      return createStreamFromText(finalMessage);
     }
-
-    // Step 6: Simpan respons AI lengkap ke storage
-    await memoryStorage.addMessageToChat(chatId, {
-      role: 'assistant',
-      content: fullResponseForStorage,
-    });
-    
-    // Step 7: Lakukan streaming jawaban ke client
-    const geminiResult = await geminiClient.generateStream(finalPromptForStreaming);
-    return handleStreamingResponse(geminiResult);
-
   } catch (error) {
-    console.error('Chat message processing error:', error);
-    // Kirim respons error streaming
-    const errorStreamResult = { success: false, error: `Maaf, terjadi kesalahan: ${error.message}` };
-    return handleStreamingResponse(errorStreamResult);
+    console.error('Critical Chat message processing error:', error);
+    const criticalErrorMsg = "Maaf, terjadi kesalahan tak terduga di sistem. Tim kami sudah diberitahu. Silakan coba lagi nanti.";
+    // Jangan lupa simpan pesan error ini juga
+    await memoryStorage.addMessageToChat(chatId, { role: 'assistant', content: criticalErrorMsg, isError: true });
+    return createStreamFromText(criticalErrorMsg);
   }
 }
