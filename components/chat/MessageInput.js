@@ -1,8 +1,3 @@
-/**
- * Enhanced MessageInput dengan Better Empty State Handling
- * Memberikan feedback yang jelas ketika input disabled
- */
-
 'use client'
 
 import { useState, useRef, useEffect } from 'react';
@@ -21,16 +16,12 @@ export default function MessageInput({ onSendMessage, disabled, isStreaming }) {
       onSendMessage(message);
       setMessage('');
       
-      // Reset textarea height
       if (textareaRef.current) {
         textareaRef.current.style.height = 'auto';
       }
     }
   };
 
-  /**
-   * Handle keyboard shortcuts
-   */
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey && !isComposing) {
       e.preventDefault();
@@ -38,9 +29,6 @@ export default function MessageInput({ onSendMessage, disabled, isStreaming }) {
     }
   };
 
-  /**
-   * Handle IME composition (for languages like Chinese, Japanese)
-   */
   const handleComposition = (e) => {
     if (e.type === 'compositionstart') {
       setIsComposing(true);
@@ -56,15 +44,11 @@ export default function MessageInput({ onSendMessage, disabled, isStreaming }) {
   const handleInput = (e) => {
     setMessage(e.target.value);
     
-    // Auto-resize
     const textarea = e.target;
     textarea.style.height = 'auto';
     textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
   };
 
-  /**
-   * Auto-focus textarea ketika component mount
-   */
   useEffect(() => {
     if (textareaRef.current && !disabled) {
       textareaRef.current.focus();
@@ -73,7 +57,6 @@ export default function MessageInput({ onSendMessage, disabled, isStreaming }) {
 
   const canSend = message.trim() && !disabled && !isStreaming;
 
-  // Determine placeholder message based on state
   const getPlaceholder = () => {
     if (isStreaming) return "AI is thinking...";
     if (disabled) return "Please select or create a chat to start messaging...";

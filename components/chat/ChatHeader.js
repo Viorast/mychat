@@ -1,4 +1,3 @@
-// components/chat/ChatHeader.js - UPDATED FOR SAVING TITLE
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -99,7 +98,6 @@ export default function ChatHeader({ chat, connectionStatus = 'connected' }) {
                   </div>
                 </div>
               ) : (
-                // View Mode
                 <div className="flex items-center space-x-3 group">
                   <h1 
                     className="text-lg font-semibold text-gray-900 truncate cursor-pointer hover:text-gray-700 transition-colors"
@@ -159,7 +157,6 @@ export default function ChatHeader({ chat, connectionStatus = 'connected' }) {
             </div>
           </div>
 
-          {/* Right Section - Action Buttons (Simplified) */}
           <div className="flex items-center space-x-2 flex-shrink-0">
             
             {/* Export Button */}

@@ -1,8 +1,3 @@
-/**
- * Fixed Sidebar dengan Better Error Handling
- * FIXED: Handle chat creation errors dengan graceful degradation
- */
-
 'use client'
 
 import { useState, useEffect } from 'react';
@@ -46,9 +41,6 @@ export default function Sidebar() {
     setLocalChats(groupedChats);
   }, [chats]);
 
-  /**
-   * Handle new chat creation - FIXED: Better error handling
-   */
   const handleNewChat = async () => {
     if (isCreatingChat) return; // Prevent multiple clicks
     
@@ -59,7 +51,6 @@ export default function Sidebar() {
       const newChat = await createChat();
       
       if (newChat) {
-        // FIXED: Tidak perlu call selectChat lagi karena sudah dihandle di createChat
         console.log('New chat created successfully:', newChat.id);
         
         // Auto-close sidebar on mobile setelah memilih chat

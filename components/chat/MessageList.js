@@ -1,8 +1,3 @@
-/**
- * Enhanced Message List dengan Optimized Rendering
- * Mencegah re-renders yang tidak perlu
- */
-
 import React, { forwardRef, useImperativeHandle, useRef, useEffect, useCallback } from 'react';
 import MessageBubble from './MessageBubble';
 import LoadingSpinner from '../ui/LoadingSpinner';
@@ -31,19 +26,13 @@ const MessageList = forwardRef(({ messages, isLoading, isStreaming }, ref) => {
     },
   }));
 
-  /**
-   * Auto-scroll ke bottom hanya untuk pesan baru
-   * ✅ FIXED: Tidak scroll jika user manually scroll ke atas
-   */
   const handleAutoScroll = useCallback(() => {
     const container = containerRef.current;
     if (!container) return;
 
-    // Check jika user dekat bottom (within 100px)
     const isNearBottom = 
       container.scrollHeight - container.scrollTop - container.clientHeight < 100;
 
-    // Only scroll jika ada pesan baru dan user dekat bottom
     const hasNewMessages = messages.length > prevMessagesLengthRef.current;
     
     if (hasNewMessages && isNearBottom) {

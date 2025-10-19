@@ -1,4 +1,3 @@
-// app/api/gemini/stream/route.js - FIXED VERSION
 import { NextResponse } from 'next/server';
 import { memoryStorage } from '../../../../lib/storage/memory';
 import { geminiClient } from '../../../../lib/gemini/client';
@@ -17,7 +16,7 @@ export async function POST(request) {
     }
 
     chatId = requestChatId || chatId;
-    console.log('🔍 Processing stream request:', { message: message.substring(0, 50), chatId, updateTitle });
+    console.log('Processing stream request:', { message: message.substring(0, 50), chatId, updateTitle });
 
     // Simpan pesan user ke storage
     const userMessage = await memoryStorage.addMessageToChat(chatId, {
@@ -28,7 +27,6 @@ export async function POST(request) {
 
     console.log('User message saved:', userMessage.id);
 
-    // Generate response dari Gemini (non-streaming untuk simplicity)
     const aiResponse = await geminiClient.generateResponse(message.trim());
     
     if (!aiResponse.success) {
@@ -47,13 +45,11 @@ export async function POST(request) {
 
     console.log('Assistant message saved:', assistantMessage.id);
 
-    // FIXED: Auto-generate chat title jika diperlukan
     let updatedChat = null;
     if (updateTitle) {
       try {
         const currentChat = await memoryStorage.getChatById(chatId);
         if (currentChat && (currentChat.title === 'New Chat' || currentChat.title === 'New Chat...')) {
-          // Generate title dari pesan pertama (maksimal 30 karakter)
           const newTitle = message.trim().substring(0, 30) + (message.length > 30 ? '...' : '');
           updatedChat = await memoryStorage.updateChat(chatId, {
             title: newTitle
@@ -62,11 +58,9 @@ export async function POST(request) {
         }
       } catch (titleError) {
         console.warn('⚠️ Failed to update chat title:', titleError);
-        // Jangan throw error untuk title update failure
       }
     }
 
-    // FIXED: Return JSON response yang konsisten
     return NextResponse.json({
       success: true,
       data: {
@@ -95,7 +89,6 @@ export async function POST(request) {
     // Fallback response
     const fallbackResponse = "Maaf, terjadi kesalahan saat memproses permintaan Anda. Silakan coba lagi.";
 
-    // Simpan fallback message
     try {
       await memoryStorage.addMessageToChat(chatId, {
         content: fallbackResponse,

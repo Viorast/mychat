@@ -1,8 +1,3 @@
-/**
- * Enhanced ChatInterface dengan Always-Visible Input
- * Memastikan chat input selalu terlihat meski tanpa active chat
- */
-
 'use client'
 
 import { useEffect, useRef } from 'react';
@@ -25,7 +20,6 @@ export default function ChatInterface() {
     canSendMessage,
   } = useChat();
 
-  // ✅ FIXED: Gunakan ref untuk stable message list reference
   const messageListRef = useRef();
   const hasInitializedRef = useRef(false);
 
@@ -47,7 +41,6 @@ export default function ChatInterface() {
    */
   useEffect(() => {
     if (messageListRef.current && messages.length > 0) {
-      // ✅ FIXED: Only scroll if not initial load
       if (hasInitializedRef.current) {
         messageListRef.current.scrollToBottom();
       } else {
@@ -90,7 +83,6 @@ export default function ChatInterface() {
           </div>
         </div>
         
-        {/* ✅ FIXED: Input tetap visible meski loading */}
         <div className="border-t border-gray-200 bg-white p-4">
           <MessageInput 
             onSendMessage={handleSendMessage}
@@ -137,7 +129,6 @@ export default function ChatInterface() {
       {/* Message Area */}
       <div className="flex-1 overflow-hidden">
         {hasActiveChat ? (
-          // Ada active chat - tampilkan messages
           <MessageList 
             ref={messageListRef}
             messages={messages}
@@ -168,7 +159,6 @@ export default function ChatInterface() {
         )}
       </div>
       
-      {/* ✅ FIXED: Message Input SELALU visible */}
       <div className="border-t border-gray-200 bg-white">
         <MessageInput 
           onSendMessage={handleSendMessage}

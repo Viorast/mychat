@@ -8,7 +8,6 @@ import { handleStreamingResponse } from '../../../lib/gemini/stream';
 
 /**
  * GET /api/chat - Get user's chat list
- * FIXED: Mengembalikan fungsi GET yang hilang
  */
 export async function GET(request) {
   try {
@@ -38,7 +37,6 @@ export async function GET(request) {
 
 /**
  * POST /api/chat - Create new chat OR send message to existing chat
- * FIXED: Mengembalikan fungsi POST yang hilang
  */
 export async function POST(request) {
   try {
@@ -50,12 +48,10 @@ export async function POST(request) {
       chatId 
     } = body;
 
-    // Jika ada message, proses sebagai chat message
     if (message) {
       return await handleChatMessage(message, chatId, userId);
     }
 
-    // Jika tidak ada message, proses sebagai chat creation
     if (!title?.trim()) {
       return NextResponse.json(
         { error: 'Chat title is required' },
@@ -88,8 +84,7 @@ export async function POST(request) {
 }
 
 /**
- * Handle chat message processing (n8n workflow simulation) with STREAMING
- * Ini adalah fungsi helper, tidak diekspor
+ * Handle chat message processing with CONVERSATION HISTORY and DYNAMIC CONTEXT
  */
 async function handleChatMessage(message, chatId, userId) { 
   const createStreamFromText = (text) => {
@@ -108,7 +103,7 @@ async function handleChatMessage(message, chatId, userId) {
   };
 
   try {
-    console.log('💬 Processing user query:', message);
+    console.log(' Processing user query:', message);
 
     await memoryStorage.addMessageToChat(chatId, { role: 'user', content: message });
 
@@ -118,14 +113,20 @@ async function handleChatMessage(message, chatId, userId) {
         await memoryStorage.updateChat(chatId, { title: newTitle });
     }
 
+    const history = (await memoryStorage.getMessagesByChat(chatId)).slice(-11, -1); // Ambil 10 pesan terakhir sebelum pesan baru
+    console.log(`Found ${history.length} messages in history.`);
+    
     const schema = await schemaService.getFullSchema();
-    const aiResponse = await queryService.generateSQLQuery(message, schema);
-    console.log('🤖 AI Response (SQL Gen):', aiResponse);
+    
+    const additionalContext = await queryService.getAdditionalContext(schema);
+    console.log('Fetched additional context (row counts, sample data).');
+
+    const aiResponse = await queryService.generateSQLQuery(message, schema, history, additionalContext);
+    console.log('AI Response (SQL Gen):', aiResponse);
 
     if (aiResponse.needs_query_execution && aiResponse.query) {
       let result;
       try {
-        // ✅ Bungkus eksekusi query dalam try...catch sendiri
         const validation = queryExecutor.validateQuery(aiResponse.query);
         if (!validation.valid) throw new Error(validation.error);
         
@@ -133,7 +134,7 @@ async function handleChatMessage(message, chatId, userId) {
         if (!result.success) throw new Error(result.error);
 
       } catch (dbError) {
-        console.error('❌ Database Execution Error:', dbError.message);
+        console.error('Database Execution Error:', dbError.message);
         const userFriendlyError = "Maaf, saya mengalami sedikit kendala saat mencoba mengambil data. Mungkin informasi yang Anda minta tidak tersedia atau ada kesalahan internal. Silakan coba pertanyaan lain.";
         await memoryStorage.addMessageToChat(chatId, { role: 'assistant', content: userFriendlyError, isError: true });
         return createStreamFromText(userFriendlyError);
@@ -155,7 +156,6 @@ async function handleChatMessage(message, chatId, userId) {
       return handleStreamingResponse(geminiResult);
 
     } else {
-      // Alur jika TIDAK perlu query (sapaan, di luar konteks, dll.)
       const finalMessage = aiResponse.message;
       await memoryStorage.addMessageToChat(chatId, { role: 'assistant', content: finalMessage });
       return createStreamFromText(finalMessage);
@@ -163,7 +163,6 @@ async function handleChatMessage(message, chatId, userId) {
   } catch (error) {
     console.error('Critical Chat message processing error:', error);
     const criticalErrorMsg = "Maaf, terjadi kesalahan tak terduga di sistem. Tim kami sudah diberitahu. Silakan coba lagi nanti.";
-    // Jangan lupa simpan pesan error ini juga
     await memoryStorage.addMessageToChat(chatId, { role: 'assistant', content: criticalErrorMsg, isError: true });
     return createStreamFromText(criticalErrorMsg);
   }

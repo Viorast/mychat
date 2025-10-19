@@ -29,7 +29,6 @@ export default function Home() {
         await selectChat(newChat);
       }
     } catch (error) {
-      // Error dihandle oleh useChat hook
       console.error('Failed to create new chat:', error);
     }
   };
@@ -41,7 +40,6 @@ export default function Home() {
     try {
       await selectChat(chat);
     } catch (error) {
-      // Error dihandle oleh useChat hook
       console.error('Failed to select chat:', error);
     }
   };

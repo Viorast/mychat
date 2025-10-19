@@ -1,11 +1,5 @@
-/**
- * Fixed Message Bubble Component
- * ✅ FIXED: AI messages di kiri, User messages di kanan
- * Improved styling dan timestamp display
- */
-
 export default function MessageBubble({ message, className = '', style, showTimestamp = true }) {
-  const isAI = message.role === 'assistant'; // ✅ FIXED: Gunakan role untuk menentukan alignment
+  const isAI = message.role === 'assistant'; // 
   
   return (
     <div 

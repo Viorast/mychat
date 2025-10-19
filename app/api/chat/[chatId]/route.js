@@ -1,7 +1,3 @@
-/**
- * Fixed Chat API Route dengan Dynamic Params Handling
- */
-
 import { NextResponse } from 'next/server';
 import { memoryStorage } from '../../../../lib/storage/memory';
 
@@ -10,7 +6,7 @@ import { memoryStorage } from '../../../../lib/storage/memory';
  */
 export async function GET(request, { params }) {
   try {
-    const { chatId } = params; // ✅ FIXED: Langsung destructuring tanpa await
+    const { chatId } = params; 
 
     if (!chatId || chatId === 'undefined' || chatId === 'null') {
       return NextResponse.json({ error: 'Chat ID is required' }, { status: 400 });
@@ -89,7 +85,7 @@ export async function PUT(request, { params }) {
  */
 export async function DELETE(request, { params }) {
   try {
-    const { chatId } = params; // ✅ FIXED: Langsung destructuring tanpa await
+    const { chatId } = params;
 
     if (!chatId || chatId === 'undefined' || chatId === 'null') {
       return NextResponse.json(
