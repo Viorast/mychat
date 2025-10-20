@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useChat } from '../../lib/hooks/useChat';
+import { useRouter } from 'next/navigation';
 import Button from '../ui/Button';
 
 export default function Sidebar() {
@@ -16,6 +17,7 @@ export default function Sidebar() {
     clearError,
   } = useChat();
 
+  const router = useRouter();
   const [localChats, setLocalChats] = useState({});
   const [isCreatingChat, setIsCreatingChat] = useState(false);
 
@@ -69,18 +71,11 @@ export default function Sidebar() {
   /**
    * Handle chat selection - FIXED: Better error handling
    */
-  const handleSelectChat = async (chat) => {
-    try {
-      clearError();
-      await selectChat(chat);
-      
-      // Auto-close sidebar on mobile setelah memilih chat
-      if (window.innerWidth < 768) {
-        toggleSidebar();
-      }
-    } catch (error) {
-      console.error('Failed to select chat:', error);
-      setError(`Failed to load chat: ${error.message}`);
+  const handleSelectChat = (chat) => {
+    router.push(`/chat/${chat.id}`);
+    
+    if (window.innerWidth < 768) {
+      toggleSidebar();
     }
   };
 
@@ -122,7 +117,7 @@ export default function Sidebar() {
     <div className="w-80 bg-white border-r border-gray-200 flex flex-col transition-all duration-300">
       {/* Header dengan toggle button */}
       <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-        <h1 className="text-xl font-bold text-gray-800">deepseek</h1>
+        <h1 className="text-xl font-bold text-gray-800 ml-20">TMA CHAT</h1>
         <button
           onClick={toggleSidebar}
           className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
@@ -161,7 +156,7 @@ export default function Sidebar() {
       <div className="flex-1 overflow-y-auto custom-scrollbar">
         <div className="p-4">
           {/* Today Section */}
-          {localChats['Today'] && localChats['Today'].length > 0 && (
+          {localChats['Today']?.length > 0 && (
             <div className="mb-6">
               <h3 className="text-sm font-semibold text-gray-500 mb-3 px-2">Today</h3>
               {localChats['Today'].map(chat => (
@@ -209,9 +204,9 @@ export default function Sidebar() {
       <div className="p-4 border-t border-gray-200">
         <div className="flex items-center space-x-3">
           <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-            <span className="text-sm font-medium text-white text-xs">RA</span>
+            <span className="text-sm font-medium text-white text-xs">RK</span>
           </div>
-          <span className="text-sm font-medium text-gray-700">Risky Auranzebal</span>
+          <span className="text-sm font-medium text-gray-700">Risky Kusramdani</span>
         </div>
       </div>
     </div>

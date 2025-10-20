@@ -1,13 +1,13 @@
 'use client'
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, use } from 'react';
 import { useChat } from '../../lib/hooks/useChat';
 import ChatHeader from './ChatHeader';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
 import LoadingSpinner from '../ui/LoadingSpinner';
 
-export default function ChatInterface() {
+export default function ChatInterface({ chatId}) {
   const {
     activeChat,
     messages,
@@ -18,17 +18,23 @@ export default function ChatInterface() {
     clearError,
     hasActiveChat,
     canSendMessage,
+    selectChat,
   } = useChat();
 
   const messageListRef = useRef();
   const hasInitializedRef = useRef(false);
+
+  useEffect(() => {
+    if (chatId && (!activeChat || activeChat.id !== chatId)) {
+      selectChat({ id: chatId });
+    }
+  }, [chatId, selectChat, activeChat]);
 
   /**
    * Handle new message submission - optimized
    */
   const handleSendMessage = async (content) => {
     if (!canSendMessage) return;
-    
     try {
       await sendMessage(content);
     } catch (err) {
@@ -40,12 +46,8 @@ export default function ChatInterface() {
    * Auto-scroll ke bottom hanya untuk pesan baru
    */
   useEffect(() => {
-    if (messageListRef.current && messages.length > 0) {
-      if (hasInitializedRef.current) {
-        messageListRef.current.scrollToBottom();
-      } else {
-        hasInitializedRef.current = true;
-      }
+    if (messageListRef.current) {
+      messageListRef.current.scrollToBottom();
     }
   }, [messages]);
 
@@ -95,7 +97,7 @@ export default function ChatInterface() {
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-white relative">
+    <div className="flex-1 flex flex-col bg-white relative h-full">
       {/* Error Banner */}
       {error && (
         <div className="bg-red-50 border border-red-200 px-4 py-3">
@@ -127,7 +129,7 @@ export default function ChatInterface() {
       )}
       
       {/* Message Area */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1">
         {hasActiveChat ? (
           <MessageList 
             ref={messageListRef}
@@ -145,14 +147,13 @@ export default function ChatInterface() {
                 </svg>
               </div>
               <h2 className="text-2xl font-bold text-gray-800 mb-3">
-                Welcome to TmaChat
+                Selamat datang di TmaChat
               </h2>
               <p className="text-gray-600 mb-6 leading-relaxed">
-                Start a conversation with AI assistant. Ask questions, get help with networking topics, 
-                or just have a friendly chat. I'm here to help!
+                Mulai Percakapan dengan TmaChat, Silahkan bertanya mengenai analisis dan prediksi AP, status WIFI
               </p>
               <div className="text-sm text-gray-500">
-                <p>💡 Select a chat from sidebar or create a new one to start</p>
+                <p>💡 Pilih Percakapan pada menu sidebar atau Buat percakapan</p>
               </div>
             </div>
           </div>
@@ -162,7 +163,7 @@ export default function ChatInterface() {
       <div className="border-t border-gray-200 bg-white">
         <MessageInput 
           onSendMessage={handleSendMessage}
-          disabled={!hasActiveChat || !canSendMessage}
+          disabled={!canSendMessage}
           isStreaming={isStreaming}
         />
       </div>

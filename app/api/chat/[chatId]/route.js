@@ -1,12 +1,13 @@
+// app/api/chat/[chatId]/route.js - FINAL FIX
 import { NextResponse } from 'next/server';
 import { memoryStorage } from '../../../../lib/storage/memory';
 
 /**
  * GET /api/chat/[chatId] - Get specific chat dengan messages
  */
-export async function GET(request, { params }) {
+export async function GET(request, context) {
   try {
-    const { chatId } = params; 
+    const { chatId } = context.params; // Mengambil chatId dari context.params
 
     if (!chatId || chatId === 'undefined' || chatId === 'null') {
       return NextResponse.json({ error: 'Chat ID is required' }, { status: 400 });
@@ -37,9 +38,9 @@ export async function GET(request, { params }) {
   }
 }
 
-export async function PUT(request, { params }) {
+export async function PUT(request, context) {
   try {
-    const { chatId } = params;
+    const { chatId } = context.params; // Mengambil chatId dari context.params
     const body = await request.json();
     const { title } = body;
 
@@ -68,7 +69,7 @@ export async function PUT(request, { params }) {
     });
     
   } catch (error) {
-    console.error(`PUT /api/chat/${params.chatId} error:`, error);
+    console.error(`PUT /api/chat/${context.params.chatId} error:`, error);
     return NextResponse.json(
       { 
         success: false,
@@ -83,9 +84,10 @@ export async function PUT(request, { params }) {
 /**
  * DELETE /api/chat/[chatId] - Delete chat
  */
-export async function DELETE(request, { params }) {
+//
+export async function DELETE(request, context) {
   try {
-    const { chatId } = params;
+    const { chatId } = context.params; // Mengambil chatId dari context.params
 
     if (!chatId || chatId === 'undefined' || chatId === 'null') {
       return NextResponse.json(
