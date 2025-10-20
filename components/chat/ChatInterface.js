@@ -97,7 +97,7 @@ export default function ChatInterface({ chatId}) {
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-white relative h-full">
+    <div className="flex flex-col bg-white relative h-full">
       {/* Error Banner */}
       {error && (
         <div className="bg-red-50 border border-red-200 px-4 py-3">

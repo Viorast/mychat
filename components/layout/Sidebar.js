@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useChat } from '../../lib/hooks/useChat';
 import { useRouter } from 'next/navigation';
 import Button from '../ui/Button';
+import clsx from 'clsx';
 
 export default function Sidebar() {
   const {
@@ -114,9 +115,13 @@ export default function Sidebar() {
   }
 
   return (
-    <div className="w-80 bg-white border-r border-gray-200 flex flex-col transition-all duration-300">
+    <aside className={clsx(
+      "fixed top-0 left-0 h-full bg-white border-r border-gray-200 flex flex-col z-20",
+      "transition-all duration-300 ease-in-out",
+      sidebarOpen ? "w-75" : "w-16"
+    )}>
       {/* Header dengan toggle button */}
-      <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+      <div className="p-4 h-18 border-b border-gray-200 flex items-center justify-between">
         <h1 className="text-xl font-bold text-gray-800 ml-20">TMA CHAT</h1>
         <button
           onClick={toggleSidebar}
@@ -209,7 +214,7 @@ export default function Sidebar() {
           <span className="text-sm font-medium text-gray-700">Risky Kusramdani</span>
         </div>
       </div>
-    </div>
+    </aside>
   );
 }
 

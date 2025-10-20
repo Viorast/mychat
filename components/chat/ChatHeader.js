@@ -37,8 +37,7 @@ export default function ChatHeader({ chat, connectionStatus = 'connected' }) {
 
   return (
     <div className="border-b border-gray-200 bg-white">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center justify-between px-6 py-4">
+        <div className="flex items-center justify-between h-18 px-6 py-4">
           
           {/* Left Section - Chat Info */}
           <div className="flex items-center space-x-4 flex-1 min-w-0">
@@ -134,13 +133,7 @@ export default function ChatHeader({ chat, connectionStatus = 'connected' }) {
                     year: 'numeric'
                   })}
                 </span>
-                
-                {/* Message Count Badge */}
-                {chat?.messages && chat.messages.length > 0 && (
-                  <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
-                    {chat.messages.length} pesan
-                  </span>
-                )}
+              
 
                 {/* Connection Status */}
                 <span className={`text-xs px-2 py-1 rounded-full ${
@@ -177,7 +170,7 @@ export default function ChatHeader({ chat, connectionStatus = 'connected' }) {
 
           </div>
         </div>
-      </div>
+      
     </div>
   )
 }
