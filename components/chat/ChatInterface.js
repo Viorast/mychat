@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, use } from 'react';
+import { useEffect, useRef } from 'react';
 import { useChat } from '../../lib/hooks/useChat';
 import ChatHeader from './ChatHeader';
 import MessageList from './MessageList';
@@ -97,10 +97,10 @@ export default function ChatInterface({ chatId}) {
   }
 
   return (
-    <div className="flex flex-col bg-white relative h-full">
+    <div className="flex flex-col h-full overflow-hidden bg-white relative">
       {/* Error Banner */}
       {error && (
-        <div className="bg-red-50 border border-red-200 px-4 py-3">
+        <div className="bg-red-50 border border-red-200 px-4 py-3 z-10">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <svg className="w-5 h-5 text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -122,19 +122,21 @@ export default function ChatInterface({ chatId}) {
 
       {/* Chat Header - hanya tampil jika ada active chat */}
       {hasActiveChat && (
-        <ChatHeader 
-          chat={activeChat}
-          connectionStatus={isStreaming ? 'streaming' : 'connected'}
-        />
+        <div className="sticky top-0 z-10 bg-white shadow-sm">
+          <ChatHeader 
+            chat={activeChat}
+            connectionStatus={isStreaming ? 'streaming' : 'connected'}
+          />
+        </div>
       )}
       
       {/* Message Area */}
-      <div className="flex-1">
+      <div className="flex-1 overflow-y-auto custom-scrollbar">
         {hasActiveChat ? (
           <MessageList 
             ref={messageListRef}
             messages={messages}
-            isLoading={isLoading}
+            isLoading={isLoading && messages.length === 0}
             isStreaming={isStreaming}
           />
         ) : (
@@ -160,10 +162,10 @@ export default function ChatInterface({ chatId}) {
         )}
       </div>
       
-      <div className="border-t border-gray-200 bg-white">
+      <div className="sticky bottom-0 z-10 bg-white border-t border-gray-200">
         <MessageInput 
           onSendMessage={handleSendMessage}
-          disabled={!canSendMessage}
+          disabled={!hasActiveChat || isLoading || isStreaming}
           isStreaming={isStreaming}
         />
       </div>

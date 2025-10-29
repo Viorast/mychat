@@ -1,5 +1,16 @@
+
+
+const getImageUrl = (imageData) => {
+  if (imageData && imageData.base64 && imageData.mimeType) {
+        return `data:${imageData.mimeType};base64,${imageData.base64}`;
+    }
+    // Jika format penyimpanan berbeda, sesuaikan di sini
+    return null;
+}
+
 export default function MessageBubble({ message, className = '', style, showTimestamp = true }) {
   const isAI = message.role === 'assistant'; // 
+  const imageUrl = !isAI && message.image ? getImageUrl(message.image) : null;
   
   return (
     <div 
@@ -30,9 +41,24 @@ export default function MessageBubble({ message, className = '', style, showTime
                 : 'bg-blue-500 text-white'
             }`}
           >
-            <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
-              {message.content}
-            </p>
+            {/* Tampilkan Gambar jika ada (di atas teks) */}
+            {imageUrl && (
+                <div className="mb-2">
+                    <img
+                        src={imageUrl}
+                        alt="Lampiran pengguna"
+                        className="max-w-xs max-h-48 rounded" // Batasi ukuran gambar
+                        // Tambahkan onClick untuk zoom jika diinginkan
+                    />
+                </div>
+            )}
+
+            {/* Tampilkan Teks Pesan jika ada */}
+            {message.content && (
+                <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+                  {message.content}
+                </p>
+            )}
           </div>
 
           {/* Timestamp */}
