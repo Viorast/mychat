@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { memoryStorage } from '../../../lib/storage/memory';
 import { ragLayer } from '../../../lib/rag/ragLayer';
-import { handleStreamingResponse, createReadableStream } from '../../../lib/gemini/stream';
+import { handleStreamingResponse } from '../../../lib/gemini/stream';
 
 /**
  * GET /api/chat - Get user's chat list
@@ -83,7 +83,7 @@ export async function POST(request) {
         error: 'Failed to process request',
         details: error.message
       },
-      { status: 500 }
+      { status: 500 } 
     );
   }
 }
@@ -92,20 +92,15 @@ export async function POST(request) {
  * Handle chat message processing with CONVERSATION HISTORY and DYNAMIC CONTEXT
  */
 async function handleChatMessage(message, chatId, userId, image = null) {
-  // ... (fungsi createStreamFromText tetap sama) ...
   const createStreamFromText = (text, isError = false) => {
-    // ... (implementasi createStreamFromText tetap sama) ...
     const stream = new ReadableStream({
         async start(controller) {
             try {
                 const encoder = new TextEncoder();
-                // Kirim event start
                 controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'start', timestamp: new Date().toISOString() })}\n\n`));
-                // Kirim event chunk dengan seluruh teks
                 if (text && text.trim()) {
                   controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'chunk', content: text, timestamp: new Date().toISOString() })}\n\n`));
                 }
-                // Kirim event complete
                 controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'complete', isError: isError, timestamp: new Date().toISOString() })}\n\n`));
                 controller.close();
             } catch (e) {
@@ -114,37 +109,35 @@ async function handleChatMessage(message, chatId, userId, image = null) {
             }
         }
     });
-    // Gunakan status 500 jika ini adalah stream error
     const status = isError ? 500 : 200;
     return new Response(stream, {
         status: status,
         headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'Connection': 'keep-alive' }
     });
   };
+  // Akhir helper
 
   try {
     const trimmedMessage = message.trim();
-    // Validasi: Harus ada teks atau gambar
     if (!trimmedMessage && !image) {
         return createStreamFromText("Pesan atau gambar tidak boleh kosong.", true);
     }
 
     console.log(`[API] Processing RAG for chatId: ${chatId}, message: "${trimmedMessage.substring(0, 50)}...", hasImage: ${!!image}`);
 
-    // 1. Simpan pesan pengguna (termasuk info gambar)
+    // 1. Simpan pesan pengguna
     await memoryStorage.addMessageToChat(chatId, {
         role: 'user',
         content: trimmedMessage,
-        image: image ? { mimeType: image.mimeType, /* Hindari simpan base64 jika besar */ hasImageData: true } : null, // Simpan info, bukan data besar
+        image: image ? { mimeType: image.mimeType, hasImageData: true } : null,
         timestamp: new Date()
     });
 
     // 2. (Opsional) Update judul chat
-    // ... (logika update judul tetap sama) ...
     try {
         const currentChat = await memoryStorage.getChatById(chatId);
         if (currentChat && (currentChat.title === 'New Chat' || currentChat.title === 'New Chat...')) {
-            const newTitle = trimmedMessage ? trimmedMessage.substring(0, 30) + '...' : 'Chat with Image'; // Judul default jika hanya gambar
+            const newTitle = trimmedMessage ? trimmedMessage.substring(0, 30) + '...' : 'Chat with Image';
             await memoryStorage.updateChat(chatId, { title: newTitle });
             console.log(`[API] Chat title updated to: "${newTitle}"`);
         }
@@ -157,38 +150,50 @@ async function handleChatMessage(message, chatId, userId, image = null) {
     const history = (await memoryStorage.getMessagesByChat(chatId)).slice(-11, -1);
     console.log(`[API] Using ${history.length} previous messages as history context.`);
 
-    // 4. Proses query menggunakan RAG Layer (teruskan gambar)
-    const ragResult = await ragLayer.processQuery(trimmedMessage, history, image); // <= Teruskan 'image'
+    // 4. Proses query menggunakan RAG Layer
+    const ragResult = await ragLayer.processQuery(trimmedMessage, history, image);
 
     // 5. Handle hasil stream
-    // ... (logika handle ragResult dan streaming tetap sama) ...
-      if (ragResult && ragResult.success && ragResult.stream) {
+    if (ragResult && ragResult.success && ragResult.stream) {
         console.log('[API] RAG processing successful, streaming response...');
 
-        await memoryStorage.addMessageToChat(chatId, {
+        // --- BUAT PLACEHOLDER DAN DAPATKAN ID-NYA ---
+        const assistantMessagePlaceholder = await memoryStorage.addMessageToChat(chatId, {
              role: 'assistant',
-             content: '[Sedang memproses...]',
+             content: '[Sedang memproses...]', // Placeholder
              timestamp: new Date(),
              isStreaming: true,
              isError: ragResult.isError || false
         });
 
-        return handleStreamingResponse(ragResult);
+        if (!assistantMessagePlaceholder) {
+            console.error(`[API] Gagal membuat pesan placeholder untuk chat ID: ${chatId}. Membatalkan stream.`);
+             return createStreamFromText("Gagal menyimpan pesan placeholder.", true);
+        }
+
+        // --- TERUSKAN ID KE STREAM HANDLER ---
+        // (Ini adalah baris ~178 tempat error terjadi)
+        return handleStreamingResponse(
+          ragResult,
+          chatId, // Parameter ini sudah ada di scope handleChatMessage
+          assistantMessagePlaceholder.id // ID dari placeholder yang baru dibuat
+        );
 
     } else {
+       // ... (Logika error fallback tetap sama) ...
        const errMsg = ragResult?.error || "Terjadi kesalahan tidak dikenal saat memproses permintaan RAG.";
        console.error('[API] RAG processQuery returned invalid or failed result:', ragResult);
+       // Simpan error final ke memori
        await memoryStorage.addMessageToChat(chatId, { role: 'assistant', content: errMsg, isError: true, timestamp: new Date() });
        return createStreamFromText(errMsg, true);
     }
 
 
   } catch (error) {
-    // ... (error handling kritis tetap sama) ...
-        console.error('[API] Critical error in handleChatMessage:', error);
+    console.error('[API] Critical error in handleChatMessage:', error);
     const criticalErrorMsg = "Maaf, terjadi kesalahan sistem yang tidak terduga. Silakan coba lagi nanti.";
     try {
-        await memoryStorage.addMessageToChat(chatId || 'unknown_chat', { role: 'assistant', content: criticalErrorMsg, isError: true, timestamp: new Date() });
+        await memoryStorage.addMessageToChat(chatId || 'unknown_chat_error', { role: 'assistant', content: criticalErrorMsg, isError: true, timestamp: new Date() });
     } catch (storageError) {
         console.error("[API] Failed to save critical error message to storage:", storageError);
     }

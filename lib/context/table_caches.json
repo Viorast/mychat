@@ -139,27 +139,27 @@
       "keywords": ["nossa", "gangguan", "aduan", "service_id", "ttr"],
       "columns": [
         {
-          "column_name": "Incident",
+          "column_name": "incident",
           "data_type": "VARCHAR(25)",
           "description": "Nomor tiket aduan. Gunakan COUNT Incident untuk menghitung jumlah gangguan."
         },
         {
-          "column_name": "Customer_Name",
+          "column_name": "customer_Name",
           "data_type": "VARCHAR(100)",
           "description": "Nama pelanggan yang mengajukan aduan."
         },
         {
-          "column_name": "Summary",
+          "column_name": "summary",
           "data_type": "TEXT",
           "description": "Kendala aduan atau lokasi circuit."
         },
         {
-          "column_name": "Source",
+          "column_name": "source",
           "data_type": "TEXT",
           "description": "Grouping macam-macam aduan."
         },
         {
-          "column_name": "Customer_Segment",
+          "column_name": "customer_Segment",
           "data_type": "VARCHAR(15)",
           "description": "Divisi telkom yang menaungi customer."
         },
@@ -174,57 +174,57 @@
           "description": "Nomor service circuit yang diadukan. Mirip dengan service_id."
         },
         {
-          "column_name": "Service_Type",
+          "column_name": "service_type",
           "data_type": "VARCHAR(200)",
           "description": "Layanan untuk circuit ini."
         },
         {
-          "column_name": "Reported_Date",
+          "column_name": "reported_date",
           "data_type": "timestamp",
           "description": "Kapan pertama tiket diajukan."
         },
         {
-          "column_name": "TTR_Customer",
+          "column_name": "ttr_customer",
           "data_type": "NUMERIC(16,2)",
           "description": "Time To Response."
         },
         {
-          "column_name": "Status",
+          "column_name": "status",
           "data_type": "VARCHAR(10)",
           "description": "Status tiket (BACKEND,CLOSED, FINALCHECK, MEDIACARE, PENDINGS, QUEUED, RESOLVED, SLAHOLD)."
         },
         {
-          "column_name": "Last_Update_Ticket",
+          "column_name": "last_update_ticket",
           "data_type": "timestamp",
           "description": "Kapan terakhir update tiket."
         },
         {
-          "column_name": "Status_Date",
+          "column_name": "status_Date",
           "data_type": "timestamp",
           "description": "Tanggal perubahan status."
         },
         {
-          "column_name": "Workzone",
+          "column_name": "workzone",
           "data_type": "VARCHAR(50)",
           "description": "Kode STO telkom."
         },
         {
-          "column_name": "Witel",
+          "column_name": "witel",
           "data_type": "VARCHAR(100)",
           "description": "Wilayah telkom."
         },
         {
-          "column_name": "Regional",
+          "column_name": "regional",
           "data_type": "VARCHAR(100)",
           "description": "Regional telkom."
         },
         {
-          "column_name": "Symptom",
+          "column_name": "symptom",
           "data_type": "VARCHAR(300)",
           "description": "PENYEBAB GANGGUAN."
         },
         {
-          "column_name": "Actual_Solution",
+          "column_name": "actual_Solution",
           "data_type": "TEXT",
           "description": "Solusi penanganan kerusakan."
         }
