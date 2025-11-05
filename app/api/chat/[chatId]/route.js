@@ -7,7 +7,8 @@ import { memoryStorage } from '../../../../lib/storage/memory';
  */
 export async function GET(request, context) {
   try {
-    const { chatId } = context.params; // Mengambil chatId dari context.params
+    // `context.params` can be async in Next; await before accessing
+    const { chatId } = await context.params;
 
     if (!chatId || chatId === 'undefined' || chatId === 'null') {
       return NextResponse.json({ error: 'Chat ID is required' }, { status: 400 });
@@ -40,7 +41,7 @@ export async function GET(request, context) {
 
 export async function PUT(request, context) {
   try {
-    const { chatId } = context.params; // Mengambil chatId dari context.params
+    const { chatId } = await context.params; // Mengambil chatId dari context.params
     const body = await request.json();
     const { title } = body;
 
@@ -69,7 +70,7 @@ export async function PUT(request, context) {
     });
     
   } catch (error) {
-    console.error(`PUT /api/chat/${context.params.chatId} error:`, error);
+    console.error(`PUT /api/chat error:`, error);
     return NextResponse.json(
       { 
         success: false,
@@ -87,7 +88,7 @@ export async function PUT(request, context) {
 //
 export async function DELETE(request, context) {
   try {
-    const { chatId } = context.params; // Mengambil chatId dari context.params
+    const { chatId } = await context.params; // Mengambil chatId dari context.params
 
     if (!chatId || chatId === 'undefined' || chatId === 'null') {
       return NextResponse.json(
