@@ -1,0 +1,234 @@
+{
+  "schema": "SDA",
+  "description": "Schema SDA merupakan data demo untuk yang berisikan data tentang log absensi karyawan dan informasi ticketing karyawan",
+  "tables": [
+      {
+        "table_name": "log_absen",
+        "description": "TABLE INI BERDIRI SENDIRI DAN TIDAK BISA DI JOIN. Table ini digunakan untuk mencatat log absensi karyawan, data ini juga berisi histori absensi karyawan. tolong perhatikan nama_karyawan dan tanggal_absen itu suatu kesatuan bila tanggal_absen dan nama karyawan tanggal dan namanya sama. perhatikan jenis_absen untuk tau karyawan submit check in dan check out nya",
+        "keywords": ["absensi", "kehadiran", "check in", "check out", "terlambat", "cuti", "lembur"],
+        "columns": [
+          {
+            "column_name": "id_absen",
+            "data_type": "integer",
+            "description": "primary key table log_absen.",
+            "example_value": [10, 11, 12],
+            "is_primary_key": true
+          },
+          {
+            "column_name": "nama_karyawan",
+            "data_type": "varchar(255)",
+            "description": "kolom ini berisi nama karyawan.",
+            "example_value": ["Karyawan A", "Karyawan B"]
+          },
+          {
+            "column_name": "jenis_absen",
+            "data_type": "varchar(255)",
+            "description": "kolom ini menjelaskan absen check in WFO, WFA atau WFH (untuk kehadirannya) dan CHECK OUT menandakan karyawan melakukan check out pulang kerja. bila ingin menggunakan query where ke kolom ini maka gunakan 'CHECK IN WFA', 'CHECK IN WFH', 'CHECK IN WFO', 'CHECK OUT', 'TERLAMBAT WFA', 'TERLAMBAT WFH', 'TERLAMBAT WFO'",
+            "example_value": ["CHECK IN WFA", "CHECK IN WFH", "CHECK IN WFO", "CHECK OUT", "TERLAMBAT WFA", "TERLAMBAT WFH", "TERLAMBAT WFO"]
+          },
+          {
+            "column_name": "tanggal_absen",
+            "data_type": "timestamp without time zone",
+            "description": "kolom ini berisi tanggal karyawan melakukan check in WFO, WFA atau WFH (untuk kehadirannya) dan CHECK OUT. Tolong hanya melihat dd-mm-yyyy saja untuk kolom ini, abaikan hh:mm:ss",
+            "example_value": ["2025-01-02 09:17:30", "2025-01-06 08:29:32"]
+          },
+          {
+            "column_name": "jam_check_in",
+            "data_type": "time without time zone",
+            "description": "kolom ini berisi jam karyawan melakukan check in WFO, WFA atau WFH (untuk kehadirannya). abaikan kolom jam_check_out bila kolom jenis_absen tidak berisi CHECK OUT",
+            "example_value": ["09:17:30", "08:29:32"]
+          },
+          {
+            "column_name": "jam_check_out",
+            "data_type": "time without time zone",
+            "description": "kolom ini berisi jam karyawan melakukan check out. abaikan kolom jam_check_in bila kolom jenis_absen berisi CHECK OUT",
+            "example_value": ["17:30:00", "18:00:00"]
+          },
+          {
+            "column_name": "jumlah_jam",
+            "data_type": "varchar(12)",
+            "description": "kolom ini berisi jumlah waktu karyawan bekerja dari check in sampai melakukan check out. bila jumlah_jam ini datanya kosong atau null berarti karyawan tersebut tidak melakukan check out",
+            "example_value": ["10.01", "9.47"],
+            "nullable": true
+          },
+          {
+            "column_name": "lokasi",
+            "data_type": "varchar(255)",
+            "description": "kolom ini berisi lokasi dimana karyawan berada ketika melakukan check in dan check out",
+            "example_value": ["Rancaekek Wetan, Bandung, West Java, Java, 40622, Indonesia", "Summarecon Mall - Bulevar Teknopolis, Bulevar Teknopolis, Summarecon Bandung, Cisaranten Kidul, Gedebage, Bandung, West Java, Java, 40295, Indonesia"]
+          },
+          {
+            "column_name": "perangkat",
+            "data_type": "varchar(255)",
+            "description": "kolom ini berisi perangkat yang di pakai karyawan ketika melakukan check in dan check out",
+            "example_value": ["MOBLE", "DESKTOP"]
+          }
+        ]
+      },
+      {
+        "table_name": "m_ticket",
+        "description": "TABLE INI BERDIRI SENDIRI DAN TIDAK BISA DI JOIN. Bila ada prompt menanyakan tentang tiket atau request maka kamu pakai table ini. Berisi semua informasi tentang tiket pekerjaan. ada kolom yang saling berhubungan antara req_date dan target_complete. untuk req_date adalah kapan kerjaan harus mulai dikerjakan dan target_complete adalah kapan pekerjaan itu harus selesai. data ",
+        "keywords": ["tiket", "no tiket", "request"],
+         "columns": [
+          {
+            "column_name": "id",
+            "data_type": "bigint",
+            "description": "Primary key tabel m_ticket.",
+            "is_primary_key": true,
+            "example_value": [3069, 3071, 3691]
+          },
+          {
+            "column_name": "ticket_type",
+            "data_type": "bigint",
+            "description": "kolom ini berisi tentang tipe tiket, bila isi datanya 1=incident, 2=change, 3=explorasi, dan bila 0 atau null berarti tipe tiket itu berisi 'lain-lain'.",
+            "example_value": [1, 2, 3, 0]
+          },
+          {
+            "column_name": "no_ticket",
+            "data_type": "varchar(255)",
+            "description": "kolom ini berisikan nomor tiket dan bersifat unique.",
+            "example_value": ["I-3689/07/25", "C-3692/07/25", "E-3693/07/25"]
+          },
+          {
+            "column_name": "req_date",
+            "data_type": "timestamp",
+            "description": "kolom ini berisi tentang tanggal dan waktu pekerjaan itu kapan harus mulai di kerjakan.",
+            "example_value": ["2025-07-15 09:00:00", "2025-07-20 10:30:00"]
+          },
+          {
+            "column_name": "dev_name",
+            "data_type": "varchar(255)",
+            "description": "kolom ini berisikan tentang nama karyawan yang melakukan pekerjaan atau ditugaskan atau membuat tiket.",
+            "example_value": ["Karyawan A", "Karyawan B"]
+          },
+          {
+            "column_name": "target_complete",
+            "data_type": "timestamp",
+            "description": "kolom ini berisikan tentang tanggal dan waktu pekerjaan selesai di kerjakan.",
+            "example_value": ["2025-07-20 17:00:00", "2025-07-25 16:30:00"]
+          },
+          {
+            "column_name": "status",
+            "data_type": "varchar(255)",
+            "description": "kolom ini berisikan tentang status request atau pekerjaan itu. bila 'open'=pekerjaan/request belum di kerjakan, bila 'on progress'=pekerjaan itu sedang dikerjakan oleh karyawan sesuai dengan yg ada di kolom dev_name, bila 'close'=pekerjaan atau request tersebut telah selesai.",
+            "example_value": ["open", "on progress", "close"]
+          },
+          {
+            "column_name": "create_date",
+            "data_type": "timestamp",
+            "description": "kolom ini berisikan tentang kapan tiket atau request itu di buat.",
+            "example_value": ["2025-07-10 08:00:00", "2025-07-12 14:15:00"]
+          },
+          {
+            "column_name": "last_edited",
+            "data_type": "timestamp",
+            "description": "kolom ini berisikan tentang kapan terakhir tiket ini di edit biasanya untuk merubah kolom status.",
+            "example_value": ["2025-07-18 11:30:00", "2025-07-22 15:45:00"]
+          },
+          {
+            "column_name": "start_progress",
+            "data_type": "timestamp",
+            "description": "kolom ini berisikan tentang kapan karyawan (kolom dev_name) mulai melakukan pekerjaan.",
+            "example_value": ["2025-07-16 09:00:00", "2025-07-21 10:30:00"]
+          }
+        ]
+      },
+      {
+      "table_name": "nossa_closed",
+      "description": "TABLE INI BERDIRI SENDIRI. Bila ada prompt menanyakan tentang 'nossa', 'gangguan', atau 'service_id', WAJIB GUNAKAN tabel ini. Ini adalah tabel TUNGGAL untuk data aduan Nossa. JANGAN PERNAH membuat JOIN ke tabel lain.",
+      "keywords": ["nossa", "gangguan", "aduan", "service_id", "ttr"],
+      "columns": [
+        {
+          "column_name": "incident",
+          "data_type": "VARCHAR(25)",
+          "description": "Nomor tiket aduan. Gunakan COUNT Incident untuk menghitung jumlah gangguan."
+        },
+        {
+          "column_name": "customer_Name",
+          "data_type": "VARCHAR(100)",
+          "description": "Nama pelanggan yang mengajukan aduan."
+        },
+        {
+          "column_name": "summary",
+          "data_type": "TEXT",
+          "description": "Kendala aduan atau lokasi circuit."
+        },
+        {
+          "column_name": "source",
+          "data_type": "TEXT",
+          "description": "Grouping macam-macam aduan."
+        },
+        {
+          "column_name": "customer_Segment",
+          "data_type": "VARCHAR(15)",
+          "description": "Divisi telkom yang menaungi customer."
+        },
+        {
+          "column_name": "service_id",
+          "data_type": "VARCHAR(500)",
+          "description": "KUNCI PENCARIAN. Nomor service circuit yang diadukan. Gunakan kolom ini untuk filter."
+        },
+        {
+          "column_name": "service_no",
+          "data_type": "VARCHAR(500)",
+          "description": "Nomor service circuit yang diadukan. Mirip dengan service_id."
+        },
+        {
+          "column_name": "service_type",
+          "data_type": "VARCHAR(200)",
+          "description": "Layanan untuk circuit ini."
+        },
+        {
+          "column_name": "reported_date",
+          "data_type": "timestamp",
+          "description": "Kapan pertama tiket diajukan."
+        },
+        {
+          "column_name": "ttr_customer",
+          "data_type": "NUMERIC(16,2)",
+          "description": "Time To Response."
+        },
+        {
+          "column_name": "status",
+          "data_type": "VARCHAR(10)",
+          "description": "Status tiket (BACKEND,CLOSED, FINALCHECK, MEDIACARE, PENDINGS, QUEUED, RESOLVED, SLAHOLD)."
+        },
+        {
+          "column_name": "last_update_ticket",
+          "data_type": "timestamp",
+          "description": "Kapan terakhir update tiket."
+        },
+        {
+          "column_name": "status_Date",
+          "data_type": "timestamp",
+          "description": "Tanggal perubahan status."
+        },
+        {
+          "column_name": "workzone",
+          "data_type": "VARCHAR(50)",
+          "description": "Kode STO telkom."
+        },
+        {
+          "column_name": "witel",
+          "data_type": "VARCHAR(100)",
+          "description": "Wilayah telkom."
+        },
+        {
+          "column_name": "regional",
+          "data_type": "VARCHAR(100)",
+          "description": "Regional telkom."
+        },
+        {
+          "column_name": "symptom",
+          "data_type": "VARCHAR(300)",
+          "description": "PENYEBAB GANGGUAN."
+        },
+        {
+          "column_name": "actual_Solution",
+          "data_type": "TEXT",
+          "description": "Solusi penanganan kerusakan."
+        }
+      ]
+    }
+  ]
+}

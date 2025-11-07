@@ -10,7 +10,7 @@ export default function ChatItem({ chat }) {
   };
 
   const handleDropdownClick = (e) => {
-    e.stopPropagation(); // supaya klik dropdown tidak trigger parent button
+    e.stopPropagation(); 
     console.log('Dropdown clicked');
   };
 

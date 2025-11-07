@@ -1,40 +1,32 @@
-/**
- * Fixed ChatHeader Component
- * Menghapus updateChatTitle yang tidak diperlukan karena title sudah auto-update
- */
-
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Button from '../ui/Button'
+import { useChat } from '../../lib/hooks/useChat';
 
 export default function ChatHeader({ chat, connectionStatus = 'connected' }) {
   const [isEditing, setIsEditing] = useState(false)
   const [editedTitle, setEditedTitle] = useState(chat?.title || 'New Chat')
+  const { updateChatTitle } = useChat();
 
-  /**
-   * Handle save judul chat yang diedit
-   * ✅ FIXED: Tidak perlu updateChatTitle karena title sudah auto-update dari pesan pertama
-   */
-  const handleSaveTitle = () => {
-    // ✅ FIXED: Simpan langsung ke state local, tidak perlu API call
-    setIsEditing(false)
-    
-    // Note: Title akan terupdate otomatis ketika user mengirim pesan pertama
-    console.log('Title updated locally:', editedTitle.trim())
+  useEffect(() => {
+    if (chat?.title) {
+      setEditedTitle(chat.title);
+    }
+  }, [chat?.title]);
+
+  const handleSaveTitle = async () => {
+    if (chat && editedTitle.trim() !== chat.title) {
+        await updateChatTitle(chat.id, editedTitle.trim());
+    }
+    setIsEditing(false);
   }
 
-  /**
-   * Handle cancel edit judul
-   */
   const handleCancelEdit = () => {
     setEditedTitle(chat?.title || 'New Chat')
     setIsEditing(false)
   }
 
-  /**
-   * Handle key press pada input edit
-   */
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') {
       handleSaveTitle()
@@ -45,8 +37,7 @@ export default function ChatHeader({ chat, connectionStatus = 'connected' }) {
 
   return (
     <div className="border-b border-gray-200 bg-white">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center justify-between px-6 py-4">
+        <div className="flex items-center justify-between h-18 px-6 py-4">
           
           {/* Left Section - Chat Info */}
           <div className="flex items-center space-x-4 flex-1 min-w-0">
@@ -106,7 +97,6 @@ export default function ChatHeader({ chat, connectionStatus = 'connected' }) {
                   </div>
                 </div>
               ) : (
-                // View Mode
                 <div className="flex items-center space-x-3 group">
                   <h1 
                     className="text-lg font-semibold text-gray-900 truncate cursor-pointer hover:text-gray-700 transition-colors"
@@ -143,13 +133,7 @@ export default function ChatHeader({ chat, connectionStatus = 'connected' }) {
                     year: 'numeric'
                   })}
                 </span>
-                
-                {/* Message Count Badge */}
-                {chat?.messages && chat.messages.length > 0 && (
-                  <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
-                    {chat.messages.length} pesan
-                  </span>
-                )}
+              
 
                 {/* Connection Status */}
                 <span className={`text-xs px-2 py-1 rounded-full ${
@@ -166,7 +150,6 @@ export default function ChatHeader({ chat, connectionStatus = 'connected' }) {
             </div>
           </div>
 
-          {/* Right Section - Action Buttons (Simplified) */}
           <div className="flex items-center space-x-2 flex-shrink-0">
             
             {/* Export Button */}
@@ -187,7 +170,7 @@ export default function ChatHeader({ chat, connectionStatus = 'connected' }) {
 
           </div>
         </div>
-      </div>
+      
     </div>
   )
 }

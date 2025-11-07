@@ -1,13 +1,10 @@
-/**
- * Fixed Sidebar dengan Better Error Handling
- * ✅ FIXED: Handle chat creation errors dengan graceful degradation
- */
-
 'use client'
 
 import { useState, useEffect } from 'react';
 import { useChat } from '../../lib/hooks/useChat';
+import { useRouter } from 'next/navigation';
 import Button from '../ui/Button';
+import clsx from 'clsx';
 
 export default function Sidebar() {
   const {
@@ -21,6 +18,7 @@ export default function Sidebar() {
     clearError,
   } = useChat();
 
+  const router = useRouter();
   const [localChats, setLocalChats] = useState({});
   const [isCreatingChat, setIsCreatingChat] = useState(false);
 
@@ -46,9 +44,6 @@ export default function Sidebar() {
     setLocalChats(groupedChats);
   }, [chats]);
 
-  /**
-   * Handle new chat creation - ✅ FIXED: Better error handling
-   */
   const handleNewChat = async () => {
     if (isCreatingChat) return; // Prevent multiple clicks
     
@@ -59,7 +54,6 @@ export default function Sidebar() {
       const newChat = await createChat();
       
       if (newChat) {
-        // ✅ FIXED: Tidak perlu call selectChat lagi karena sudah dihandle di createChat
         console.log('New chat created successfully:', newChat.id);
         
         // Auto-close sidebar on mobile setelah memilih chat
@@ -76,20 +70,13 @@ export default function Sidebar() {
   };
 
   /**
-   * Handle chat selection - ✅ FIXED: Better error handling
+   * Handle chat selection - FIXED: Better error handling
    */
-  const handleSelectChat = async (chat) => {
-    try {
-      clearError();
-      await selectChat(chat);
-      
-      // Auto-close sidebar on mobile setelah memilih chat
-      if (window.innerWidth < 768) {
-        toggleSidebar();
-      }
-    } catch (error) {
-      console.error('Failed to select chat:', error);
-      setError(`Failed to load chat: ${error.message}`);
+  const handleSelectChat = (chat) => {
+    router.push(`/chat/${chat.id}`);
+    
+    if (window.innerWidth < 768) {
+      toggleSidebar();
     }
   };
 
@@ -128,10 +115,14 @@ export default function Sidebar() {
   }
 
   return (
-    <div className="w-80 bg-white border-r border-gray-200 flex flex-col transition-all duration-300">
+    <aside className={clsx(
+      "fixed top-0 left-0 h-full bg-white border-r border-gray-200 flex flex-col z-20",
+      "transition-all duration-300 ease-in-out",
+      sidebarOpen ? "w-75" : "w-16"
+    )}>
       {/* Header dengan toggle button */}
-      <div className="p-4 border-b border-gray-200 flex items-center justify-between">
-        <h1 className="text-xl font-bold text-gray-800">deepseek</h1>
+      <div className="p-4 h-18 border-b border-gray-200 flex items-center justify-between">
+        <h1 className="text-xl font-bold text-gray-800 ml-20">TMA CHAT</h1>
         <button
           onClick={toggleSidebar}
           className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
@@ -170,7 +161,7 @@ export default function Sidebar() {
       <div className="flex-1 overflow-y-auto custom-scrollbar">
         <div className="p-4">
           {/* Today Section */}
-          {localChats['Today'] && localChats['Today'].length > 0 && (
+          {localChats['Today']?.length > 0 && (
             <div className="mb-6">
               <h3 className="text-sm font-semibold text-gray-500 mb-3 px-2">Today</h3>
               {localChats['Today'].map(chat => (
@@ -218,12 +209,12 @@ export default function Sidebar() {
       <div className="p-4 border-t border-gray-200">
         <div className="flex items-center space-x-3">
           <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-            <span className="text-sm font-medium text-white text-xs">RA</span>
+            <span className="text-sm font-medium text-white text-xs">RK</span>
           </div>
-          <span className="text-sm font-medium text-gray-700">Risky Auranzebal</span>
+          <span className="text-sm font-medium text-gray-700">Risky Kusramdani</span>
         </div>
       </div>
-    </div>
+    </aside>
   );
 }
 

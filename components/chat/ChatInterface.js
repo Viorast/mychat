@@ -1,8 +1,3 @@
-/**
- * Enhanced ChatInterface dengan Always-Visible Input
- * Memastikan chat input selalu terlihat meski tanpa active chat
- */
-
 'use client'
 
 import { useEffect, useRef } from 'react';
@@ -12,7 +7,7 @@ import MessageList from './MessageList';
 import MessageInput from './MessageInput';
 import LoadingSpinner from '../ui/LoadingSpinner';
 
-export default function ChatInterface() {
+export default function ChatInterface({ chatId}) {
   const {
     activeChat,
     messages,
@@ -23,18 +18,23 @@ export default function ChatInterface() {
     clearError,
     hasActiveChat,
     canSendMessage,
+    selectChat,
   } = useChat();
 
-  // ✅ FIXED: Gunakan ref untuk stable message list reference
   const messageListRef = useRef();
   const hasInitializedRef = useRef(false);
+
+  useEffect(() => {
+    if (chatId && (!activeChat || activeChat.id !== chatId)) {
+      selectChat({ id: chatId });
+    }
+  }, [chatId, selectChat, activeChat]);
 
   /**
    * Handle new message submission - optimized
    */
   const handleSendMessage = async (content) => {
     if (!canSendMessage) return;
-    
     try {
       await sendMessage(content);
     } catch (err) {
@@ -46,13 +46,8 @@ export default function ChatInterface() {
    * Auto-scroll ke bottom hanya untuk pesan baru
    */
   useEffect(() => {
-    if (messageListRef.current && messages.length > 0) {
-      // ✅ FIXED: Only scroll if not initial load
-      if (hasInitializedRef.current) {
-        messageListRef.current.scrollToBottom();
-      } else {
-        hasInitializedRef.current = true;
-      }
+    if (messageListRef.current) {
+      messageListRef.current.scrollToBottom();
     }
   }, [messages]);
 
@@ -90,7 +85,6 @@ export default function ChatInterface() {
           </div>
         </div>
         
-        {/* ✅ FIXED: Input tetap visible meski loading */}
         <div className="border-t border-gray-200 bg-white p-4">
           <MessageInput 
             onSendMessage={handleSendMessage}
@@ -103,10 +97,10 @@ export default function ChatInterface() {
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-white relative">
+    <div className="flex flex-col h-full overflow-hidden bg-white relative">
       {/* Error Banner */}
       {error && (
-        <div className="bg-red-50 border border-red-200 px-4 py-3">
+        <div className="bg-red-50 border border-red-200 px-4 py-3 z-10">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <svg className="w-5 h-5 text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -128,20 +122,21 @@ export default function ChatInterface() {
 
       {/* Chat Header - hanya tampil jika ada active chat */}
       {hasActiveChat && (
-        <ChatHeader 
-          chat={activeChat}
-          connectionStatus={isStreaming ? 'streaming' : 'connected'}
-        />
+        <div className="sticky top-0 z-10 bg-white shadow-sm">
+          <ChatHeader 
+            chat={activeChat}
+            connectionStatus={isStreaming ? 'streaming' : 'connected'}
+          />
+        </div>
       )}
       
       {/* Message Area */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-y-auto custom-scrollbar">
         {hasActiveChat ? (
-          // Ada active chat - tampilkan messages
           <MessageList 
             ref={messageListRef}
             messages={messages}
-            isLoading={isLoading}
+            isLoading={isLoading && messages.length === 0}
             isStreaming={isStreaming}
           />
         ) : (
@@ -154,25 +149,23 @@ export default function ChatInterface() {
                 </svg>
               </div>
               <h2 className="text-2xl font-bold text-gray-800 mb-3">
-                Welcome to TmaChat
+                Selamat datang di TmaChat
               </h2>
               <p className="text-gray-600 mb-6 leading-relaxed">
-                Start a conversation with AI assistant. Ask questions, get help with networking topics, 
-                or just have a friendly chat. I'm here to help!
+                Mulai Percakapan dengan TmaChat, Silahkan bertanya mengenai analisis dan prediksi AP, status WIFI
               </p>
               <div className="text-sm text-gray-500">
-                <p>💡 Select a chat from sidebar or create a new one to start</p>
+                <p>💡 Pilih Percakapan pada menu sidebar atau Buat percakapan</p>
               </div>
             </div>
           </div>
         )}
       </div>
       
-      {/* ✅ FIXED: Message Input SELALU visible */}
-      <div className="border-t border-gray-200 bg-white">
+      <div className="sticky bottom-0 z-10 bg-white border-t border-gray-200">
         <MessageInput 
           onSendMessage={handleSendMessage}
-          disabled={!hasActiveChat || !canSendMessage}
+          disabled={!hasActiveChat || isLoading || isStreaming}
           isStreaming={isStreaming}
         />
       </div>
