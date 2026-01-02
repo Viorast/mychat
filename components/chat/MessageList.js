@@ -2,7 +2,7 @@ import React, { forwardRef, useImperativeHandle, useRef, useEffect, useCallback 
 import MessageBubble from './MessageBubble';
 import LoadingSpinner from '../ui/LoadingSpinner';
 
-const MessageList = forwardRef(({ messages, isLoading, isStreaming }, ref) => {
+const MessageList = forwardRef(({ messages, isLoading, isStreaming, onEdit }, ref) => {
   const messagesEndRef = useRef(null);
   const containerRef = useRef(null);
   const prevMessagesLengthRef = useRef(0);
@@ -12,16 +12,16 @@ const MessageList = forwardRef(({ messages, isLoading, isStreaming }, ref) => {
    */
   useImperativeHandle(ref, () => ({
     scrollToBottom: () => {
-      messagesEndRef.current?.scrollIntoView({ 
+      messagesEndRef.current?.scrollIntoView({
         behavior: 'smooth',
         block: 'end'
       });
     },
-    
+
     scrollToTop: () => {
-      containerRef.current?.scrollTo({ 
-        top: 0, 
-        behavior: 'smooth' 
+      containerRef.current?.scrollTo({
+        top: 0,
+        behavior: 'smooth'
       });
     },
   }));
@@ -30,15 +30,15 @@ const MessageList = forwardRef(({ messages, isLoading, isStreaming }, ref) => {
     const container = containerRef.current;
     if (!container) return;
 
-    const isNearBottom = 
+    const isNearBottom =
       container.scrollHeight - container.scrollTop - container.clientHeight < 100;
 
     const hasNewMessages = messages.length > prevMessagesLengthRef.current;
-    
+
     if (hasNewMessages && isNearBottom) {
       setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ 
-          behavior: 'smooth' 
+        messagesEndRef.current?.scrollIntoView({
+          behavior: 'smooth'
         });
       }, 100);
     }
@@ -53,7 +53,7 @@ const MessageList = forwardRef(({ messages, isLoading, isStreaming }, ref) => {
   // Empty state
   if (messages.length === 0 && !isLoading) {
     return (
-      <div 
+      <div
         ref={containerRef}
         className="h-full overflow-y-auto custom-scrollbar bg-gray-50"
       >
@@ -68,7 +68,7 @@ const MessageList = forwardRef(({ messages, isLoading, isStreaming }, ref) => {
               Start a conversation
             </h3>
             <p className="text-gray-600 text-sm">
-              Send a message to begin chatting with TmaChat AI. 
+              Send a message to begin chatting with TmaChat AI.
               Ask questions, get help, or just have a conversation!
             </p>
           </div>
@@ -78,7 +78,7 @@ const MessageList = forwardRef(({ messages, isLoading, isStreaming }, ref) => {
   }
 
   return (
-    <div 
+    <div
       ref={containerRef}
       className="h-full overflow-y-auto custom-scrollbar bg-gray-50"
     >
@@ -92,19 +92,20 @@ const MessageList = forwardRef(({ messages, isLoading, isStreaming }, ref) => {
 
         {/* Messages dengan optimized rendering */}
         {messages.map((message, index) => (
-          <MessageBubble 
+          <MessageBubble
             key={message.id}
             message={message}
             isStreaming={message.isStreaming}
-            showTimestamp={index === messages.length - 1 || 
+            onEdit={onEdit}
+            showTimestamp={index === messages.length - 1 ||
               messages[index + 1]?.role !== message.role}
             className="message-enter"
-            style={{ 
-              animationDelay: `${Math.min(index * 0.05, 0.5)}s` 
+            style={{
+              animationDelay: `${Math.min(index * 0.05, 0.5)}s`
             }}
           />
         ))}
-        
+
         {/* Streaming Indicator */}
         {isStreaming && (
           <div className="flex justify-start mb-4">
@@ -116,7 +117,7 @@ const MessageList = forwardRef(({ messages, isLoading, isStreaming }, ref) => {
             </div>
           </div>
         )}
-        
+
         {/* Scroll anchor */}
         <div ref={messagesEndRef} className="h-4" />
       </div>
