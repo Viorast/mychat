@@ -1,8 +1,9 @@
 /**
- * Root Layout dengan Chat Provider
+ * Root Layout dengan Chat Provider dan Auth Provider
  */
 
 import { ChatProvider } from '../lib/context/ChatContext';
+import AuthProvider from '../components/auth/AuthProvider';
 import './globals.css';
 
 export const metadata = {
@@ -14,9 +15,11 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className="h-screen bg-gray-50">
-        <ChatProvider>
-          {children}
-        </ChatProvider>
+        <AuthProvider>
+          <ChatProvider>
+            {children}
+          </ChatProvider>
+        </AuthProvider>
       </body>
     </html>
   );

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import { useChat } from '../../lib/hooks/useChat';
 import { useRouter, useParams } from 'next/navigation';
 import Button from '../ui/Button';
@@ -12,11 +13,12 @@ import RenameDialog from '../chat/RenameDialog';
 import MoveToGroupDialog from '../chat/MoveToGroupDialog';
 import GroupContextMenu from '../chat/GroupContextMenu';
 import RenameGroupDialog from '../chat/RenameGroupDialog';
-
-// Default User UUID
-const DEFAULT_USER_ID = '00000000-0000-0000-0000-000000000001';
+import UserMenu from '../auth/UserMenu';
 
 export default function Sidebar() {
+  const { data: session } = useSession();
+  const userId = session?.user?.id || '00000000-0000-0000-0000-000000000001';
+
   const {
     chats,
     activeChat,
@@ -50,7 +52,7 @@ export default function Sidebar() {
   const loadGroupsAndChats = async () => {
     try {
       // Load groups
-      const groupsRes = await fetch(`/api/groups?userId=${DEFAULT_USER_ID}`);
+      const groupsRes = await fetch(`/api/groups?userId=${userId}`);
       const groupsData = await groupsRes.json();
 
       if (groupsData.success) {
@@ -164,7 +166,7 @@ export default function Sidebar() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: groupName,
-          userId: DEFAULT_USER_ID
+          userId: userId
         })
       });
 
@@ -375,11 +377,8 @@ export default function Sidebar() {
 
       {/* User Profile Footer */}
       <div className="p-4 border-t border-gray-200">
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-            <span className="text-sm font-medium text-white text-xs">RK</span>
-          </div>
-          <span className="text-sm font-medium text-gray-700">Risky Kusramdani</span>
+        <div className="flex items-center justify-between">
+          <UserMenu />
         </div>
       </div>
     </aside>
