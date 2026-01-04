@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { Edit2, Check, X as XIcon, Copy, Check as CheckIcon } from 'lucide-react';
 import ImageModal from '../ui/ImageModal';
+import ChartRenderer, { parseChartTag, removeChartTags } from './ChartRenderer';
+import SimpleTable, { parseTableTag, removeTableTags } from './SimpleTable';
 
 const getImageUrl = (imageData) => {
     if (imageData && imageData.base64 && imageData.mimeType) {
@@ -12,34 +14,44 @@ const getImageUrl = (imageData) => {
 };
 
 /**
- * Parse suggestions from AI message content
- * Format: [SARAN]:\n1. Question 1\n2. Question 2\n3. Question 3
+ * Parse AI message content including suggestions, charts, and tables
  */
-const parseSuggestions = (content) => {
-    if (!content) return { mainContent: content, suggestions: [] };
+const parseAIContent = (content) => {
+    if (!content) return { textContent: content, suggestions: [], charts: [], tables: [] };
 
-    const saranMatch = content.match(/\[SARAN\]:?\s*([\s\S]*)/i);
+    // Parse charts
+    const charts = parseChartTag(content);
+    let processedContent = removeChartTags(content);
 
-    if (!saranMatch) {
-        return { mainContent: content, suggestions: [] };
-    }
+    // Parse tables
+    const tables = parseTableTag(processedContent);
+    processedContent = removeTableTags(processedContent);
 
-    // Split content into main and suggestions
-    const mainContent = content.substring(0, saranMatch.index).trim();
-    const saranText = saranMatch[1];
-
-    // Extract numbered questions
+    // Parse suggestions
+    const saranMatch = processedContent.match(/\[SARAN\]:?\s*([\s\S]*)/i);
+    let textContent = processedContent;
     const suggestions = [];
-    const lines = saranText.split('\n');
 
-    for (const line of lines) {
-        const match = line.match(/^\d+\.\s*(.+)$/);
-        if (match && match[1].trim()) {
-            suggestions.push(match[1].trim());
+    if (saranMatch) {
+        textContent = processedContent.substring(0, saranMatch.index).trim();
+        const saranText = saranMatch[1];
+        const lines = saranText.split('\n');
+
+        for (const line of lines) {
+            const match = line.match(/^\d+\.\s*(.+)$/);
+            if (match && match[1].trim()) {
+                suggestions.push(match[1].trim());
+            }
         }
     }
 
-    return { mainContent, suggestions };
+    return { textContent, suggestions, charts, tables };
+};
+
+// Legacy function for backward compatibility
+const parseSuggestions = (content) => {
+    const result = parseAIContent(content);
+    return { mainContent: result.textContent, suggestions: result.suggestions };
 };
 
 export default function MessageBubble({
@@ -53,8 +65,14 @@ export default function MessageBubble({
     const isAI = message.role === 'assistant';
     const imageUrl = !isAI && message.image ? getImageUrl(message.image) : null;
 
-    // Parse suggestions for AI messages
-    const { mainContent, suggestions } = isAI ? parseSuggestions(message.content) : { mainContent: message.content, suggestions: [] };
+    // Parse AI content including charts, tables, and suggestions
+    const parsedContent = isAI
+        ? parseAIContent(message.content)
+        : { textContent: message.content, suggestions: [], charts: [], tables: [] };
+
+    const { textContent, suggestions, charts, tables } = parsedContent;
+    // For backward compatibility
+    const mainContent = textContent;
 
     const [isEditing, setIsEditing] = useState(false);
     const [editedContent, setEditedContent] = useState(message.content || '');
@@ -206,6 +224,31 @@ export default function MessageBubble({
                                     </p>
                                 )}
                             </div>
+
+                            {/* Render Charts */}
+                            {isAI && charts.length > 0 && (
+                                <div className="mt-2">
+                                    {charts.map((chart, idx) => (
+                                        <ChartRenderer
+                                            key={idx}
+                                            chartType={chart.chartType}
+                                            config={chart.config}
+                                        />
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* Render Tables */}
+                            {isAI && tables.length > 0 && (
+                                <div className="mt-2">
+                                    {tables.map((table, idx) => (
+                                        <SimpleTable
+                                            key={idx}
+                                            config={table.config}
+                                        />
+                                    ))}
+                                </div>
+                            )}
 
                             {/* Action Icons - Below Bubble, Visible on Hover */}
                             <div className={`flex gap-2 mt-1 opacity-0 group-hover:opacity-100 transition-opacity ${isAI ? 'justify-start' : 'justify-end'
