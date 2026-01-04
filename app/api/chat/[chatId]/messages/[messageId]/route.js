@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { memoryStorage } from '../../../../../../lib/storage/memory';
+import { databaseStorage } from '../../../../../../lib/storage/database';
 
 /**
  * PATCH /api/chat/[chatId]/messages/[messageId]
@@ -21,7 +21,7 @@ export async function PATCH(request, context) {
         }
 
         // Get all messages for this chat
-        const messages = await memoryStorage.getMessagesByChat(chatId);
+        const messages = await databaseStorage.getMessagesByChat(chatId);
 
         if (!messages || messages.length === 0) {
             return NextResponse.json(
@@ -59,7 +59,7 @@ export async function PATCH(request, context) {
         }
 
         // Update the message
-        const updatedMessage = await memoryStorage.updateMessage(chatId, messageId, {
+        const updatedMessage = await databaseStorage.updateMessage(chatId, messageId, {
             content: content.trim(),
             editCount: currentEditCount + 1,
             lastEditedAt: new Date()
@@ -68,7 +68,7 @@ export async function PATCH(request, context) {
         // Delete all messages after this one (for regeneration flow)
         let deletedCount = 0;
         if (truncateAfter) {
-            const result = await memoryStorage.deleteMessagesAfter(chatId, messageId);
+            const result = await databaseStorage.deleteMessagesAfter(chatId, messageId);
             deletedCount = result.deleted;
             console.log(`[API] Truncated ${deletedCount} messages after edit`);
         }

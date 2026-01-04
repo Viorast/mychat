@@ -1,13 +1,16 @@
 import { NextResponse } from 'next/server';
-import { memoryStorage } from '@/lib/storage/memory';
+import { databaseStorage } from '../../../lib/storage/database';
+
+// Default User UUID
+const DEFAULT_USER_ID = '00000000-0000-0000-0000-000000000001';
 
 // GET all groups for user
 export async function GET(request) {
     try {
         const { searchParams } = new URL(request.url);
-        const userId = searchParams.get('userId') || 'default-user';
+        const userId = searchParams.get('userId') || DEFAULT_USER_ID;
 
-        const groups = await memoryStorage.getGroupsByUser(userId);
+        const groups = await databaseStorage.getGroupsByUser(userId);
 
         return NextResponse.json({
             success: true,
@@ -26,7 +29,7 @@ export async function GET(request) {
 export async function POST(request) {
     try {
         const body = await request.json();
-        const { name, color, icon, userId = 'default-user' } = body;
+        const { name, color, icon, userId = DEFAULT_USER_ID } = body;
 
         if (!name || name.trim() === '') {
             return NextResponse.json(
@@ -35,7 +38,7 @@ export async function POST(request) {
             );
         }
 
-        const group = await memoryStorage.createGroup({
+        const group = await databaseStorage.createGroup({
             name: name.trim(),
             color,
             icon,

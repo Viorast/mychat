@@ -3,6 +3,9 @@
 import { useState, useCallback } from 'react';
 import { Search, X } from 'lucide-react';
 
+// Default User UUID
+const DEFAULT_USER_ID = '00000000-0000-0000-0000-000000000001';
+
 export default function SearchBar({ onSearch, onClear }) {
     const [query, setQuery] = useState('');
     const [isSearching, setIsSearching] = useState(false);
@@ -24,7 +27,7 @@ export default function SearchBar({ onSearch, onClear }) {
 
         setIsSearching(true);
         try {
-            const response = await fetch(`/api/chat/search?q=${encodeURIComponent(searchQuery)}&userId=default-user`);
+            const response = await fetch(`/api/chat/search?q=${encodeURIComponent(searchQuery)}&userId=${DEFAULT_USER_ID}`);
             const data = await response.json();
 
             if (data.success) {

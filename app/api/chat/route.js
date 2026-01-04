@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { memoryStorage } from '../../../lib/storage/memory';
+import { databaseStorage } from '../../../lib/storage/database';
+
 
 // ⛔ HAPUS SEMUA impor 'ragLayer' dan 'handleStreamingResponse'
 // Hapus juga 'handleChatMessage'
@@ -10,9 +11,9 @@ import { memoryStorage } from '../../../lib/storage/memory';
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId') || 'default-user';
+    const userId = searchParams.get('userId') || '00000000-0000-0000-0000-000000000001';
 
-    const chats = await memoryStorage.getChatsByUser(userId);
+    const chats = await databaseStorage.getChatsByUser(userId);
 
     return NextResponse.json({
       success: true,
@@ -41,7 +42,7 @@ export async function POST(request) {
     const body = await request.json();
     const {
       title,
-      userId = 'default-user'
+      userId = '00000000-0000-0000-0000-000000000001'
       // ⛔ HAPUS 'message', 'image', dan 'chatId' dari sini
     } = body;
 
@@ -55,7 +56,7 @@ export async function POST(request) {
       );
     }
 
-    const newChat = await memoryStorage.createChat({
+    const newChat = await databaseStorage.createChat({
       title: title.trim(),
       userId,
     });

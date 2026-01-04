@@ -13,6 +13,9 @@ import MoveToGroupDialog from '../chat/MoveToGroupDialog';
 import GroupContextMenu from '../chat/GroupContextMenu';
 import RenameGroupDialog from '../chat/RenameGroupDialog';
 
+// Default User UUID
+const DEFAULT_USER_ID = '00000000-0000-0000-0000-000000000001';
+
 export default function Sidebar() {
   const {
     chats,
@@ -47,7 +50,7 @@ export default function Sidebar() {
   const loadGroupsAndChats = async () => {
     try {
       // Load groups
-      const groupsRes = await fetch('/api/groups?userId=default-user');
+      const groupsRes = await fetch(`/api/groups?userId=${DEFAULT_USER_ID}`);
       const groupsData = await groupsRes.json();
 
       if (groupsData.success) {
@@ -161,7 +164,7 @@ export default function Sidebar() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: groupName,
-          userId: 'default-user'
+          userId: DEFAULT_USER_ID
         })
       });
 

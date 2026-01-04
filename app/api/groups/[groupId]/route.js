@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { memoryStorage } from '@/lib/storage/memory';
+import { databaseStorage } from '../../../../lib/storage/database';
 
 // UPDATE group
 export async function PATCH(request, context) {
@@ -8,7 +8,7 @@ export async function PATCH(request, context) {
     try {
         const updates = await request.json();
 
-        const updatedGroup = await memoryStorage.updateGroup(groupId, updates);
+        const updatedGroup = await databaseStorage.updateGroup(groupId, updates);
 
         if (!updatedGroup) {
             return NextResponse.json(
@@ -37,7 +37,7 @@ export async function DELETE(request, context) {
     const { groupId } = await context.params;
 
     try {
-        await memoryStorage.deleteGroup(groupId);
+        await databaseStorage.deleteGroup(groupId);
 
         console.log(`[DELETE /api/groups/${groupId}] Deleted group`);
 

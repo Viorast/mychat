@@ -1,7 +1,7 @@
 "use server"; // Menjamin eksekusi server-side
 
 import { NextResponse } from 'next/server';
-import { memoryStorage } from '../../../../../lib/storage/memory';
+import { databaseStorage } from '../../../../../lib/storage/database';
 // Impor statis sekarang aman karena file ini hanya menangani POST
 import { ragLayer } from '../../../../../lib/rag/ragLayer';
 import { handleStreamingResponse } from '../../../../../lib/ai/stream';
@@ -18,7 +18,7 @@ export async function POST(request, context) {
     const {
       message, // Ini adalah konten teks
       image,   // Ini objek gambar { base64, mimeType }
-      userId = 'default-user' // Kita mungkin membutuhkannya nanti
+      userId = '00000000-0000-0000-0000-000000000001' // Default user UUID
     } = body;
 
     if (!chatId) {
@@ -88,7 +88,7 @@ async function handleChatMessage(message, chatId, userId, image = null, ragLayer
     console.log(`[API /message] Processing RAG for chatId: ${chatId}, message: "${trimmedMessage.substring(0, 50)}...", hasImage: ${!!image}`);
 
     // 1. Simpan pesan pengguna
-    await memoryStorage.addMessageToChat(chatId, {
+    await databaseStorage.addMessageToChat(chatId, {
       role: 'user',
       content: trimmedMessage,
       image: image ? { mimeType: image.mimeType, hasImageData: true } : null,
@@ -97,10 +97,10 @@ async function handleChatMessage(message, chatId, userId, image = null, ragLayer
 
     // 2. (Opsional) Update judul chat
     try {
-      const currentChat = await memoryStorage.getChatById(chatId);
+      const currentChat = await databaseStorage.getChatById(chatId);
       if (currentChat && (currentChat.title === 'New Chat' || currentChat.title === 'New Chat...')) {
         const newTitle = trimmedMessage ? trimmedMessage.substring(0, 30) + '...' : 'Chat with Image';
-        await memoryStorage.updateChat(chatId, { title: newTitle });
+        await databaseStorage.updateChat(chatId, { title: newTitle });
         console.log(`[API /message] Chat title updated to: "${newTitle}"`);
       }
     } catch (titleError) {
@@ -108,7 +108,7 @@ async function handleChatMessage(message, chatId, userId, image = null, ragLayer
     }
 
     // 3. Dapatkan riwayat percakapan - ✅ OPTIMIZED: Limit to 6 messages (3 user + 3 AI)
-    const history = (await memoryStorage.getMessagesByChat(chatId)).slice(-7, -1); // Get last 6 messages (excluding current)
+    const history = (await databaseStorage.getMessagesByChat(chatId)).slice(-7, -1); // Get last 6 messages (excluding current)
     console.log(`[API /message] Using ${history.length} previous messages as history context (optimized limit).`);
 
     // 4. Proses query menggunakan RAG Layer
@@ -118,7 +118,7 @@ async function handleChatMessage(message, chatId, userId, image = null, ragLayer
     if (ragResult && ragResult.success && ragResult.stream) {
       console.log('[API /message] RAG processing successful, streaming response...');
 
-      const assistantMessagePlaceholder = await memoryStorage.addMessageToChat(chatId, {
+      const assistantMessagePlaceholder = await databaseStorage.addMessageToChat(chatId, {
         role: 'assistant',
         content: '[Sedang memproses...]', // Placeholder
         timestamp: new Date(),
@@ -140,7 +140,7 @@ async function handleChatMessage(message, chatId, userId, image = null, ragLayer
     } else {
       const errMsg = ragResult?.error || "Terjadi kesalahan tidak dikenal saat memproses permintaan RAG.";
       console.error('[API /message] RAG processQuery returned invalid or failed result:', ragResult);
-      await memoryStorage.addMessageToChat(chatId, { role: 'assistant', content: errMsg, isError: true, timestamp: new Date() });
+      await databaseStorage.addMessageToChat(chatId, { role: 'assistant', content: errMsg, isError: true, timestamp: new Date() });
       return createStreamFromText(errMsg, true);
     }
 
@@ -148,7 +148,7 @@ async function handleChatMessage(message, chatId, userId, image = null, ragLayer
     console.error('[API /message] Critical error in handleChatMessage:', error);
     const criticalErrorMsg = "Maaf, terjadi kesalahan sistem yang tidak terduga. Silakan coba lagi nanti.";
     try {
-      await memoryStorage.addMessageToChat(chatId || 'unknown_chat_error', { role: 'assistant', content: criticalErrorMsg, isError: true, timestamp: new Date() });
+      await databaseStorage.addMessageToChat(chatId || 'unknown_chat_error', { role: 'assistant', content: criticalErrorMsg, isError: true, timestamp: new Date() });
     } catch (storageError) {
       console.error("[API /message] Failed to save critical error message to storage:", storageError);
     }

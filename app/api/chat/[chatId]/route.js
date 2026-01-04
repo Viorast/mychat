@@ -1,6 +1,6 @@
 // app/api/chat/[chatId]/route.js - FINAL FIX
 import { NextResponse } from 'next/server';
-import { memoryStorage } from '../../../../lib/storage/memory';
+import { databaseStorage } from '../../../../lib/storage/database';
 
 /**
  * GET /api/chat/[chatId] - Get specific chat dengan messages
@@ -16,8 +16,8 @@ export async function GET(request, context) {
 
     console.log(`📖 Fetching chat with ID: ${chatId}`);
 
-    const chat = await memoryStorage.getChatById(chatId);
-    const messages = await memoryStorage.getMessagesByChat(chatId);
+    const chat = await databaseStorage.getChatById(chatId);
+    const messages = await databaseStorage.getMessagesByChat(chatId);
 
     if (!chat) {
       return NextResponse.json({ error: 'Chat not found' }, { status: 404 });
@@ -52,7 +52,7 @@ export async function PUT(request, context) {
       );
     }
 
-    const updatedChat = await memoryStorage.updateChat(chatId, {
+    const updatedChat = await databaseStorage.updateChat(chatId, {
       title: title.trim(),
     });
 
@@ -101,7 +101,7 @@ export async function PATCH(request, context) {
       );
     }
 
-    const updatedChat = await memoryStorage.updateChat(chatId, updates);
+    const updatedChat = await databaseStorage.updateChat(chatId, updates);
 
     if (!updatedChat) {
       return NextResponse.json(
@@ -141,7 +141,7 @@ export async function DELETE(request, context) {
     }
 
     console.log(`🗑️ Deleting chat with ID: ${chatId}`);
-    await memoryStorage.deleteChat(chatId);
+    await databaseStorage.deleteChat(chatId);
 
     return NextResponse.json({
       success: true,
