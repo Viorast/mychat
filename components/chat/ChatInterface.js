@@ -297,7 +297,7 @@ export default function ChatInterface({ chatId }) {
             {/* Suggested Questions - Above Input */}
             <div className="sticky bottom-0 z-10 bg-white border-t border-gray-200">
                 {latestSuggestions.length > 0 && hasActiveChat && !isStreaming && (
-                    <div className="max-w-4xl mx-auto px-4 pt-3">
+                    <div className="w-full px-4 md:px-8 lg:px-12 pt-3">
                         <SuggestedQuestions
                             suggestions={latestSuggestions}
                             onQuestionClick={handleSuggestionClick}

@@ -82,7 +82,7 @@ const MessageList = forwardRef(({ messages, isLoading, isStreaming, onEdit }, re
       ref={containerRef}
       className="h-full overflow-y-auto custom-scrollbar bg-gray-50"
     >
-      <div className="max-w-4xl mx-auto py-6 px-4">
+      <div className="w-full h-full py-6 px-4 md:px-8 lg:px-12">
         {/* Loading indicator untuk initial load */}
         {isLoading && messages.length === 0 && (
           <div className="flex justify-center py-8">

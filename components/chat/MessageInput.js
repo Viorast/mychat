@@ -173,7 +173,7 @@ const MessageInput = forwardRef(({
     };
 
     return (
-        <div className="max-w-4xl mx-auto px-4 py-4">
+        <div className="w-full px-4 md:px-8 lg:px-12 py-4">
             <div className="flex space-x-3 items-end">
                 {/* Tombol Attach */}
                 <input
