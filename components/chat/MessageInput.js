@@ -50,6 +50,20 @@ const MessageInput = forwardRef(({
      */
     const processFile = (file) => {
         if (file && file.type.startsWith('image/')) {
+            // Client-side size validation (5MB limit)
+            const maxSize = 5 * 1024 * 1024; // 5MB
+            if (file.size > maxSize) {
+                alert('⚠️ Ukuran gambar terlalu besar. Maksimal 5MB.\n\nTips: Kompres gambar terlebih dahulu atau gunakan format yang lebih efisien.');
+                return;
+            }
+
+            // Validate image format
+            const allowedFormats = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+            if (!allowedFormats.includes(file.type)) {
+                alert('⚠️ Format gambar tidak didukung.\n\nGunakan format: PNG, JPEG, atau WebP.');
+                return;
+            }
+
             const reader = new FileReader();
             reader.onloadend = () => {
                 const base64String = reader.result
@@ -65,6 +79,7 @@ const MessageInput = forwardRef(({
             reader.readAsDataURL(file);
         } else {
             console.warn("File yang dipilih bukan gambar.");
+            alert('⚠️ File yang dipilih bukan gambar.\n\nPilih file dengan format: PNG, JPEG, atau WebP.');
         }
     };
 
@@ -256,7 +271,7 @@ const MessageInput = forwardRef(({
             <div className="mt-2 text-xs text-gray-500 text-center">
                 {isStreaming ? "AI sedang menghasilkan respons... Mohon tunggu" :
                     disabled ? "💡 Buat chat baru atau pilih dari sidebar untuk memulai" :
-                        "Tekan Enter untuk kirim, Shift+Enter untuk baris baru • Drag & drop gambar di mana saja"}
+                        "Tekan Enter untuk kirim, Shift+Enter untuk baris baru • Drag & drop gambar (PNG/JPG/WebP, max 5MB)"}
             </div>
 
             {/* Image Modal */}
