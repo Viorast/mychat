@@ -11,6 +11,37 @@ const getImageUrl = (imageData) => {
     return null;
 };
 
+/**
+ * Parse suggestions from AI message content
+ * Format: [SARAN]:\n1. Question 1\n2. Question 2\n3. Question 3
+ */
+const parseSuggestions = (content) => {
+    if (!content) return { mainContent: content, suggestions: [] };
+
+    const saranMatch = content.match(/\[SARAN\]:?\s*([\s\S]*)/i);
+
+    if (!saranMatch) {
+        return { mainContent: content, suggestions: [] };
+    }
+
+    // Split content into main and suggestions
+    const mainContent = content.substring(0, saranMatch.index).trim();
+    const saranText = saranMatch[1];
+
+    // Extract numbered questions
+    const suggestions = [];
+    const lines = saranText.split('\n');
+
+    for (const line of lines) {
+        const match = line.match(/^\d+\.\s*(.+)$/);
+        if (match && match[1].trim()) {
+            suggestions.push(match[1].trim());
+        }
+    }
+
+    return { mainContent, suggestions };
+};
+
 export default function MessageBubble({
     message,
     className = '',
@@ -21,6 +52,9 @@ export default function MessageBubble({
 }) {
     const isAI = message.role === 'assistant';
     const imageUrl = !isAI && message.image ? getImageUrl(message.image) : null;
+
+    // Parse suggestions for AI messages
+    const { mainContent, suggestions } = isAI ? parseSuggestions(message.content) : { mainContent: message.content, suggestions: [] };
 
     const [isEditing, setIsEditing] = useState(false);
     const [editedContent, setEditedContent] = useState(message.content || '');
@@ -93,8 +127,8 @@ export default function MessageBubble({
 
                 {/* Avatar */}
                 <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${isAI
-                        ? 'bg-gradient-to-br from-blue-500 to-purple-600'
-                        : 'bg-gradient-to-br from-green-500 to-blue-600'
+                    ? 'bg-gradient-to-br from-blue-500 to-purple-600'
+                    : 'bg-gradient-to-br from-green-500 to-blue-600'
                     }`}>
                     {isAI ? (
                         <span className="text-white text-xs font-bold">AI</span>
@@ -141,8 +175,8 @@ export default function MessageBubble({
                         <>
                             <div
                                 className={`rounded-2xl px-4 py-3 ${isAI
-                                        ? 'bg-white border border-gray-200 shadow-sm text-gray-800'
-                                        : 'bg-blue-500 text-white'
+                                    ? 'bg-white border border-gray-200 shadow-sm text-gray-800'
+                                    : 'bg-blue-500 text-white'
                                     }`}
                             >
                                 {/* Tampilkan Gambar jika ada */}
@@ -158,10 +192,10 @@ export default function MessageBubble({
                                     </div>
                                 )}
 
-                                {/* Message Text */}
-                                {message.content && (
+                                {/* Message Text - Use mainContent (without suggestions) */}
+                                {mainContent && (
                                     <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
-                                        {message.content}
+                                        {mainContent}
                                     </p>
                                 )}
 

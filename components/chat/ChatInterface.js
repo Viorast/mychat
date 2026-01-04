@@ -5,8 +5,32 @@ import { useChat } from '../../lib/hooks/useChat';
 import ChatHeader from './ChatHeader';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
+import SuggestedQuestions from './SuggestedQuestions';
 import LoadingSpinner from '../ui/LoadingSpinner';
 import { Image as ImageIcon } from 'lucide-react';
+
+/**
+ * Parse suggestions from AI message content
+ */
+const parseSuggestions = (content) => {
+    if (!content) return [];
+
+    const saranMatch = content.match(/\[SARAN\]:?\s*([\s\S]*)/i);
+    if (!saranMatch) return [];
+
+    const saranText = saranMatch[1];
+    const suggestions = [];
+    const lines = saranText.split('\n');
+
+    for (const line of lines) {
+        const match = line.match(/^\d+\.\s*(.+)$/);
+        if (match && match[1].trim()) {
+            suggestions.push(match[1].trim());
+        }
+    }
+
+    return suggestions;
+};
 
 export default function ChatInterface({ chatId }) {
     const {
@@ -24,9 +48,24 @@ export default function ChatInterface({ chatId }) {
     } = useChat();
 
     const messageListRef = useRef();
+    const messageInputRef = useRef(); // NEW: Ref for MessageInput
     const hasInitializedRef = useRef(false);
     const dragCounterRef = useRef(0);
     const [isDragging, setIsDragging] = useState(false);
+    const [latestSuggestions, setLatestSuggestions] = useState([]);
+
+    // Track latest AI message suggestions
+    useEffect(() => {
+        if (messages.length > 0) {
+            const lastMessage = messages[messages.length - 1];
+            if (lastMessage.role === 'assistant' && lastMessage.content) {
+                const suggestions = parseSuggestions(lastMessage.content);
+                setLatestSuggestions(suggestions);
+            }
+        } else {
+            setLatestSuggestions([]);
+        }
+    }, [messages]);
 
     useEffect(() => {
         if (chatId && (!activeChat || activeChat.id !== chatId)) {
@@ -56,6 +95,16 @@ export default function ChatInterface({ chatId }) {
             // to delete the following AI message and resend. For now, just edit the message.
         } catch (err) {
             throw err;
+        }
+    };
+
+    /**
+     * Handle suggested question click - Auto-fill input
+     */
+    const handleSuggestionClick = (question) => {
+        if (messageInputRef.current && messageInputRef.current.setInputValue) {
+            messageInputRef.current.setInputValue(question);
+            messageInputRef.current.focusInput();
         }
     };
 
@@ -245,8 +294,19 @@ export default function ChatInterface({ chatId }) {
                 )}
             </div>
 
+            {/* Suggested Questions - Above Input */}
             <div className="sticky bottom-0 z-10 bg-white border-t border-gray-200">
+                {latestSuggestions.length > 0 && hasActiveChat && !isStreaming && (
+                    <div className="max-w-4xl mx-auto px-4 pt-3">
+                        <SuggestedQuestions
+                            suggestions={latestSuggestions}
+                            onQuestionClick={handleSuggestionClick}
+                        />
+                    </div>
+                )}
+
                 <MessageInput
+                    ref={messageInputRef}
                     onSendMessage={handleSendMessage}
                     disabled={!hasActiveChat || isLoading || isStreaming}
                     isStreaming={isStreaming}

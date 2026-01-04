@@ -1,17 +1,17 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
 import Button from '../ui/Button';
 import ImageModal from '../ui/ImageModal';
 import { Paperclip, X, Image as ImageIcon } from 'lucide-react';
 
-export default function MessageInput({
+const MessageInput = forwardRef(({
     onSendMessage,
     disabled,
     isStreaming,
     isDraggingGlobal,
     onImageDrop
-}) {
+}, ref) => {
     const [message, setMessage] = useState('');
     const [imagePreview, setImagePreview] = useState(null);
     const [imageData, setImageData] = useState(null);
@@ -20,6 +20,23 @@ export default function MessageInput({
 
     const textareaRef = useRef(null);
     const fileInputRef = useRef(null);
+
+    // Expose methods to parent via ref
+    useImperativeHandle(ref, () => ({
+        setInputValue: (value) => {
+            setMessage(value);
+            // Auto-resize textarea
+            if (textareaRef.current) {
+                setTimeout(() => {
+                    textareaRef.current.style.height = 'auto';
+                    textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 120) + 'px';
+                }, 0);
+            }
+        },
+        focusInput: () => {
+            textareaRef.current?.focus();
+        }
+    }));
 
     // Accept image from global drag & drop
     useEffect(() => {
@@ -163,10 +180,10 @@ export default function MessageInput({
 
                 {/* Area Input & Pratinjau Gambar */}
                 <div className={`flex-1 flex flex-col rounded-2xl border-2 transition-all duration-200 relative ${isDraggingGlobal
-                        ? 'border-blue-500 bg-blue-50 border-dashed'
-                        : disabled || isStreaming
-                            ? 'bg-gray-100 border-gray-200 cursor-not-allowed'
-                            : 'bg-white border-gray-300 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-200'
+                    ? 'border-blue-500 bg-blue-50 border-dashed'
+                    : disabled || isStreaming
+                        ? 'bg-gray-100 border-gray-200 cursor-not-allowed'
+                        : 'bg-white border-gray-300 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-200'
                     }`}>
                     {/* Pratinjau Gambar */}
                     {imagePreview && (
@@ -212,8 +229,8 @@ export default function MessageInput({
                     onClick={handleSend}
                     disabled={!canSend}
                     className={`px-6 py-3 transition-all duration-200 flex-shrink-0 ${canSend
-                            ? 'bg-blue-500 hover:bg-blue-600 text-white shadow-sm'
-                            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        ? 'bg-blue-500 hover:bg-blue-600 text-white shadow-sm'
+                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                         }`}
                     title={canSend ? "Kirim pesan" :
                         disabled ? "Pilih chat dulu" :
@@ -252,4 +269,8 @@ export default function MessageInput({
             )}
         </div>
     );
-}
+});
+
+MessageInput.displayName = 'MessageInput';
+
+export default MessageInput;
