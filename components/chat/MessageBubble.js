@@ -7,9 +7,18 @@ import ChartRenderer, { parseChartTag, removeChartTags } from './ChartRenderer';
 import SimpleTable, { parseTableTag, removeTableTags } from './SimpleTable';
 
 const getImageUrl = (imageData) => {
-    if (imageData && imageData.base64 && imageData.mimeType) {
+    if (!imageData) return null;
+
+    // If it's already a string (URL or base64 data URI)
+    if (typeof imageData === 'string') {
+        return imageData;
+    }
+
+    // If it's the structured object with base64 and mimeType
+    if (imageData.base64 && imageData.mimeType) {
         return `data:${imageData.mimeType};base64,${imageData.base64}`;
     }
+
     return null;
 };
 

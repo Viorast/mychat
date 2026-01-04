@@ -88,10 +88,15 @@ async function handleChatMessage(message, chatId, userId, image = null, ragLayer
     console.log(`[API /message] Processing RAG for chatId: ${chatId}, message: "${trimmedMessage.substring(0, 50)}...", hasImage: ${!!image}`);
 
     // 1. Simpan pesan pengguna
+    // Construct Data URI if image exists
+    const imageDataUrl = image
+      ? `data:${image.mimeType};base64,${image.base64}`
+      : null;
+
     await databaseStorage.addMessageToChat(chatId, {
       role: 'user',
       content: trimmedMessage,
-      image: image ? { mimeType: image.mimeType, hasImageData: true } : null,
+      imageUrl: imageDataUrl, // Gunakan key 'imageUrl' dan simpan string lengkap
       timestamp: new Date()
     });
 
