@@ -1,6 +1,6 @@
 // app/api/chat/[chatId]/route.js - FINAL FIX
 import { NextResponse } from 'next/server';
-import { memoryStorage } from '../../../../lib/storage/memory';
+import { databaseStorage } from '../../../../lib/storage/database';
 
 /**
  * GET /api/chat/[chatId] - Get specific chat dengan messages
@@ -16,8 +16,8 @@ export async function GET(request, context) {
 
     console.log(`📖 Fetching chat with ID: ${chatId}`);
 
-    const chat = await memoryStorage.getChatById(chatId);
-    const messages = await memoryStorage.getMessagesByChat(chatId);
+    const chat = await databaseStorage.getChatById(chatId);
+    const messages = await databaseStorage.getMessagesByChat(chatId);
 
     if (!chat) {
       return NextResponse.json({ error: 'Chat not found' }, { status: 404 });
@@ -52,7 +52,7 @@ export async function PUT(request, context) {
       );
     }
 
-    const updatedChat = await memoryStorage.updateChat(chatId, {
+    const updatedChat = await databaseStorage.updateChat(chatId, {
       title: title.trim(),
     });
 
@@ -68,15 +68,58 @@ export async function PUT(request, context) {
       data: updatedChat,
       message: 'Chat title updated successfully',
     });
-    
+
   } catch (error) {
     console.error(`PUT /api/chat error:`, error);
     return NextResponse.json(
-      { 
+      {
         success: false,
         error: 'Failed to update chat',
-        details: error.message 
+        details: error.message
       },
+      { status: 500 }
+    );
+  }
+}
+
+// ✅ NEW: PATCH for rename (alias of PUT for consistency)
+export async function PATCH(request, context) {
+  const { chatId } = await context.params;
+
+  try {
+    const body = await request.json();
+    const { title, groupId } = body;
+
+    const updates = {};
+    if (title !== undefined) updates.title = title.trim();
+    if (groupId !== undefined) updates.groupId = groupId;
+
+    if (Object.keys(updates).length === 0) {
+      return NextResponse.json(
+        { success: false, error: 'No updates provided' },
+        { status: 400 }
+      );
+    }
+
+    const updatedChat = await databaseStorage.updateChat(chatId, updates);
+
+    if (!updatedChat) {
+      return NextResponse.json(
+        { success: false, error: 'Chat not found' },
+        { status: 404 }
+      );
+    }
+
+    console.log(`✏️  Updated chat ${chatId}:`, updates);
+
+    return NextResponse.json({
+      success: true,
+      chat: updatedChat
+    });
+  } catch (error) {
+    console.error(`PATCH /api/chat/${chatId} error:`, error);
+    return NextResponse.json(
+      { success: false, error: error.message },
       { status: 500 }
     );
   }
@@ -98,20 +141,20 @@ export async function DELETE(request, context) {
     }
 
     console.log(`🗑️ Deleting chat with ID: ${chatId}`);
-    await memoryStorage.deleteChat(chatId);
+    await databaseStorage.deleteChat(chatId);
 
     return NextResponse.json({
       success: true,
       message: 'Chat deleted successfully',
     });
-    
+
   } catch (error) {
     console.error(`DELETE /api/chat/[chatId] error:`, error);
     return NextResponse.json(
-      { 
+      {
         success: false,
         error: 'Failed to delete chat',
-        details: error.message 
+        details: error.message
       },
       { status: 500 }
     );

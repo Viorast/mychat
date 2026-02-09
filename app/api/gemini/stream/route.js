@@ -4,7 +4,7 @@ import { geminiClient } from '../../../../lib/gemini/client';
 
 export async function POST(request) {
   let chatId = 'default-chat';
-  
+
   try {
     const { message, chatId: requestChatId, updateTitle = false } = await request.json();
 
@@ -28,7 +28,7 @@ export async function POST(request) {
     console.log('User message saved:', userMessage.id);
 
     const aiResponse = await geminiClient.generateResponse(message.trim());
-    
+
     if (!aiResponse.success) {
       throw new Error('Failed to generate AI response');
     }
@@ -74,7 +74,7 @@ export async function POST(request) {
         userMessage: {
           id: userMessage.id,
           content: message.trim(),
-          role: 'user', 
+          role: 'user',
           timestamp: userMessage.timestamp,
           chatId: chatId
         },
@@ -85,7 +85,7 @@ export async function POST(request) {
 
   } catch (error) {
     console.error('Gemini stream error:', error);
-    
+
     // Fallback response
     const fallbackResponse = "Maaf, terjadi kesalahan saat memproses permintaan Anda. Silakan coba lagi.";
 
@@ -101,7 +101,7 @@ export async function POST(request) {
     }
 
     return NextResponse.json(
-      { 
+      {
         success: false,
         error: 'Stream processing failed',
         message: fallbackResponse,
@@ -117,22 +117,22 @@ export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
     const chatId = searchParams.get('chatId') || 'default-chat';
-    
+
     const messages = await memoryStorage.getMessagesByChat(chatId);
-    
+
     return NextResponse.json({
       success: true,
       data: messages,
       count: messages.length,
     });
-    
+
   } catch (error) {
     console.error('GET /api/gemini/stream error:', error);
     return NextResponse.json(
-      { 
+      {
         success: false,
         error: 'Failed to fetch messages',
-        details: error.message 
+        details: error.message
       },
       { status: 500 }
     );

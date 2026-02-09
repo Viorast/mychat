@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { memoryStorage } from '../../../lib/storage/memory';
+import { databaseStorage } from '../../../lib/storage/database';
+
 
 // ⛔ HAPUS SEMUA impor 'ragLayer' dan 'handleStreamingResponse'
 // Hapus juga 'handleChatMessage'
@@ -9,28 +10,28 @@ import { memoryStorage } from '../../../lib/storage/memory';
  */
 export async function GET(request) {
   try {
-        const { searchParams } = new URL(request.url);
-        const userId = searchParams.get('userId') || 'default-user';
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId') || '00000000-0000-0000-0000-000000000001';
 
-        const chats = await memoryStorage.getChatsByUser(userId);
+    const chats = await databaseStorage.getChatsByUser(userId);
 
-        return NextResponse.json({
-        success: true,
-        data: chats,
-        count: chats.length,
-        });
+    return NextResponse.json({
+      success: true,
+      data: chats,
+      count: chats.length,
+    });
 
-    } catch (error) {
-        console.error('GET /api/chat error:', error);
-        return NextResponse.json(
-        {
-            success: false,
-            error: 'Failed to fetch chats',
-            details: error.message
-        },
-        { status: 500 }
-        );
-    }
+  } catch (error) {
+    console.error('GET /api/chat error:', error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Failed to fetch chats',
+        details: error.message
+      },
+      { status: 500 }
+    );
+  }
 }
 
 /**
@@ -41,12 +42,12 @@ export async function POST(request) {
     const body = await request.json();
     const {
       title,
-      userId = 'default-user'
+      userId = '00000000-0000-0000-0000-000000000001'
       // ⛔ HAPUS 'message', 'image', dan 'chatId' dari sini
     } = body;
 
     // ⛔ HAPUS: Seluruh blok 'if (message || image)'
-    
+
     // Logika untuk membuat chat baru
     if (!title?.trim()) {
       return NextResponse.json(
@@ -55,7 +56,7 @@ export async function POST(request) {
       );
     }
 
-    const newChat = await memoryStorage.createChat({
+    const newChat = await databaseStorage.createChat({
       title: title.trim(),
       userId,
     });
@@ -74,7 +75,7 @@ export async function POST(request) {
         error: 'Failed to process request',
         details: error.message
       },
-      { status: 500 } 
+      { status: 500 }
     );
   }
 }
