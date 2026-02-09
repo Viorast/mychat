@@ -74,7 +74,6 @@ export default function LoginPage() {
                         <span className="logo-icon">💬</span>
                         <span className="logo-text">TmaChat</span>
                     </div>
-                    <h1>Selamat Datang</h1>
                     <p>Masuk ke akun Anda untuk melanjutkan</p>
                 </div>
 
@@ -91,7 +90,7 @@ export default function LoginPage() {
                     {/* Email Field */}
                     <div className="form-group">
                         <label htmlFor="email">Email</label>
-                        <div className="input-wrapper">
+                        <div className="input-wrapper gap-2">
                             <Mail size={18} className="input-icon" />
                             <input
                                 type="email"
@@ -109,7 +108,7 @@ export default function LoginPage() {
                     {/* Password Field */}
                     <div className="form-group">
                         <label htmlFor="password">Password</label>
-                        <div className="input-wrapper">
+                        <div className="input-wrapper gap-2">
                             <Lock size={18} className="input-icon" />
                             <input
                                 type={showPassword ? 'text' : 'password'}
@@ -190,9 +189,9 @@ export default function LoginPage() {
                 .login-card {
                     background: #ffffff;
                     border-radius: 16px;
-                    padding: 40px;
+                    padding: 48px 56px;
                     width: 100%;
-                    max-width: 420px;
+                    max-width: 480px;
                     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
                 }
 
@@ -220,15 +219,15 @@ export default function LoginPage() {
                 }
 
                 .login-header h1 {
-                    font-size: 24px;
+                    font-size: 26px;
                     font-weight: 600;
                     color: #1e293b;
-                    margin: 0 0 8px 0;
+                    margin: 0 0 6px 0;
                 }
 
                 .login-header p {
                     color: #64748b;
-                    margin: 0;
+                    margin: 8px 0 0 0;
                     font-size: 14px;
                 }
 
@@ -278,7 +277,7 @@ export default function LoginPage() {
 
                 .input-wrapper input {
                     width: 100%;
-                    padding: 12px 14px 12px 44px;
+                    padding: 14px 16px 14px 12px;
                     border: 1px solid #e5e7eb;
                     border-radius: 10px;
                     font-size: 15px;

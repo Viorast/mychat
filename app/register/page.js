@@ -168,7 +168,6 @@ export default function RegisterPage() {
                         <span className="logo-icon">💬</span>
                         <span className="logo-text">TmaChat</span>
                     </div>
-                    <h1>Buat Akun Baru</h1>
                     <p>Daftar untuk mulai menggunakan TmaChat</p>
                 </div>
 
@@ -185,7 +184,7 @@ export default function RegisterPage() {
                     {/* Name Field */}
                     <div className="form-group">
                         <label htmlFor="name">Nama Lengkap</label>
-                        <div className="input-wrapper">
+                        <div className="input-wrapper gap-2">
                             <User size={18} className="input-icon" />
                             <input
                                 type="text"
@@ -203,7 +202,7 @@ export default function RegisterPage() {
                     {/* Email Field */}
                     <div className="form-group">
                         <label htmlFor="email">Email</label>
-                        <div className="input-wrapper">
+                        <div className="input-wrapper gap-2">
                             <Mail size={18} className="input-icon" />
                             <input
                                 type="email"
@@ -221,7 +220,7 @@ export default function RegisterPage() {
                     {/* Password Field */}
                     <div className="form-group">
                         <label htmlFor="password">Password</label>
-                        <div className="input-wrapper">
+                        <div className="input-wrapper gap-2">
                             <Lock size={18} className="input-icon" />
                             <input
                                 type={showPassword ? 'text' : 'password'}
@@ -247,7 +246,7 @@ export default function RegisterPage() {
                     {/* Confirm Password Field */}
                     <div className="form-group">
                         <label htmlFor="confirmPassword">Konfirmasi Password</label>
-                        <div className="input-wrapper">
+                        <div className="input-wrapper gap-2">
                             <Lock size={18} className="input-icon" />
                             <input
                                 type={showPassword ? 'text' : 'password'}
@@ -320,15 +319,15 @@ export default function RegisterPage() {
                 .login-card {
                     background: #ffffff;
                     border-radius: 16px;
-                    padding: 40px;
+                    padding: 32px 52px;
                     width: 100%;
-                    max-width: 420px;
+                    max-width: 520px;
                     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
                 }
 
                 .login-header {
                     text-align: center;
-                    margin-bottom: 32px;
+                    margin-bottom: 20px;
                 }
 
                 .logo {
@@ -336,7 +335,7 @@ export default function RegisterPage() {
                     align-items: center;
                     justify-content: center;
                     gap: 8px;
-                    margin-bottom: 16px;
+                    margin-bottom: 10px;
                 }
 
                 .logo-icon {
@@ -358,7 +357,7 @@ export default function RegisterPage() {
 
                 .login-header p {
                     color: #64748b;
-                    margin: 0;
+                    margin: 8px 0 0 0;
                     font-size: 14px;
                 }
 
@@ -378,13 +377,13 @@ export default function RegisterPage() {
                 .login-form {
                     display: flex;
                     flex-direction: column;
-                    gap: 16px;
+                    gap: 10px;
                 }
 
                 .form-group {
                     display: flex;
                     flex-direction: column;
-                    gap: 6px;
+                    gap: 4px;
                 }
 
                 .form-group label {
@@ -408,10 +407,10 @@ export default function RegisterPage() {
 
                 .input-wrapper input {
                     width: 100%;
-                    padding: 12px 14px 12px 44px;
+                    padding: 10px 14px 10px 10px;
                     border: 1px solid #e5e7eb;
                     border-radius: 10px;
-                    font-size: 15px;
+                    font-size: 14px;
                     transition: all 0.2s;
                     background: #f9fafb;
                 }
@@ -451,7 +450,7 @@ export default function RegisterPage() {
                     justify-content: center;
                     gap: 8px;
                     width: 100%;
-                    padding: 14px;
+                    padding: 12px;
                     background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
                     color: white;
                     border: none;
@@ -460,7 +459,7 @@ export default function RegisterPage() {
                     font-weight: 600;
                     cursor: pointer;
                     transition: all 0.2s;
-                    margin-top: 8px;
+                    margin-top: 6px;
                 }
 
                 .btn-primary:hover:not(:disabled) {
@@ -485,7 +484,7 @@ export default function RegisterPage() {
                 .divider {
                     display: flex;
                     align-items: center;
-                    margin: 24px 0;
+                    margin: 16px 0;
                 }
 
                 .divider::before,
@@ -531,7 +530,7 @@ export default function RegisterPage() {
 
                 .register-link {
                     text-align: center;
-                    margin-top: 24px;
+                    margin-top: 16px;
                     font-size: 14px;
                     color: #64748b;
                 }

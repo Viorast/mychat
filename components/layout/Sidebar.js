@@ -14,6 +14,7 @@ import MoveToGroupDialog from '../chat/MoveToGroupDialog';
 import GroupContextMenu from '../chat/GroupContextMenu';
 import RenameGroupDialog from '../chat/RenameGroupDialog';
 import UserMenu from '../auth/UserMenu';
+import ConfirmDialog from '../ui/ConfirmDialog';
 
 export default function Sidebar() {
   const { data: session } = useSession();
@@ -43,11 +44,16 @@ export default function Sidebar() {
   const [renameDialog, setRenameDialog] = useState(null);
   const [renameGroupDialog, setRenameGroupDialog] = useState(null);
   const [moveToGroupDialog, setMoveToGroupDialog] = useState(null);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [deleteGroupConfirm, setDeleteGroupConfirm] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Load groups and organize chats
   useEffect(() => {
-    loadGroupsAndChats();
-  }, [chats]);
+    if (userId) {
+      loadGroupsAndChats();
+    }
+  }, [chats, userId]);
 
   const loadGroupsAndChats = async () => {
     try {
@@ -116,11 +122,10 @@ export default function Sidebar() {
     }
   };
 
-  // ✅ FIX Issue #1: Proper delete handler
+  // ✅ FIX Issue #1: Proper delete handler with ConfirmDialog
   const handleDelete = async (chat) => {
-    if (!window.confirm(`Delete "${chat.title}"?`)) return;
-
     try {
+      setIsDeleting(true);
       const response = await fetch(`/api/chat/${chat.id}`, {
         method: 'DELETE'
       });
@@ -133,9 +138,14 @@ export default function Sidebar() {
           setActiveChat(null); // Clear active chat
           router.push('/'); // Redirect to home
         }
+
+        setDeleteConfirm(null); // Close dialog
       }
     } catch (error) {
       console.error('Delete error:', error);
+      alert('Failed to delete chat. Please try again.');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -188,11 +198,10 @@ export default function Sidebar() {
     setRenameGroupDialog(null);
   };
 
-  // ✅ FIX Issue #4: Delete group
+  // ✅ FIX Issue #4: Delete group with ConfirmDialog
   const handleDeleteGroup = async (group) => {
-    if (!window.confirm(`Delete group "${group.name}"? All chats will move to Uncategorized.`)) return;
-
     try {
+      setIsDeleting(true);
       const response = await fetch(`/api/groups/${group.id}`, {
         method: 'DELETE'
       });
@@ -200,10 +209,13 @@ export default function Sidebar() {
       if (response.ok) {
         await refreshChats?.();
         await loadGroupsAndChats();
+        setDeleteGroupConfirm(null); // Close dialog
       }
     } catch (error) {
       console.error('Delete group error:', error);
       alert(error.message || 'Failed to delete group');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -330,7 +342,7 @@ export default function Sidebar() {
           position={contextMenu.position}
           onClose={() => setContextMenu(null)}
           onRename={(chat) => setRenameDialog(chat)}
-          onDelete={handleDelete}
+          onDelete={(chat) => setDeleteConfirm(chat)}
           onMoveToGroup={(chat) => setMoveToGroupDialog(chat)}
         />
       )}
@@ -342,7 +354,7 @@ export default function Sidebar() {
           position={groupContextMenu.position}
           onClose={() => setGroupContextMenu(null)}
           onRename={(group) => setRenameGroupDialog(group)}
-          onDelete={handleDeleteGroup}
+          onDelete={(group) => setDeleteGroupConfirm(group)}
         />
       )}
 
@@ -374,6 +386,32 @@ export default function Sidebar() {
           onCancel={() => setMoveToGroupDialog(null)}
         />
       )}
+
+      {/* Delete Chat Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={!!deleteConfirm}
+        title="Hapus Chat?"
+        message={`Apakah Anda yakin ingin menghapus chat "${deleteConfirm?.title}"?`}
+        confirmText="OK"
+        cancelText="Batal"
+        variant="danger"
+        onConfirm={() => handleDelete(deleteConfirm)}
+        onCancel={() => setDeleteConfirm(null)}
+        isLoading={isDeleting}
+      />
+
+      {/* Delete Group Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={!!deleteGroupConfirm}
+        title="Hapus Grup?"
+        message={`Apakah Anda yakin ingin menghapus grup "${deleteGroupConfirm?.name}"? Semua chat akan dipindahkan ke Uncategorized.`}
+        confirmText="OK"
+        cancelText="Batal"
+        variant="warning"
+        onConfirm={() => handleDeleteGroup(deleteGroupConfirm)}
+        onCancel={() => setDeleteGroupConfirm(null)}
+        isLoading={isDeleting}
+      />
 
       {/* User Profile Footer */}
       <div className="p-4 border-t border-gray-200">
