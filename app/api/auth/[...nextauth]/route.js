@@ -1,12 +1,27 @@
-import NextAuth from 'next-auth';
-import CredentialsProvider from 'next-auth/providers/credentials';
-import GoogleProvider from 'next-auth/providers/google';
+import NextAuthModule from 'next-auth';
+import CredentialsProviderModule from 'next-auth/providers/credentials';
+import GoogleProviderModule from 'next-auth/providers/google';
 import { validateCredentials, upsertGoogleUser, findUserById } from '@/lib/services/userService';
 
 /**
  * NextAuth Configuration
  * Supports: Email/Password + Google OAuth
  */
+
+// Validate NEXTAUTH_SECRET
+if (!process.env.NEXTAUTH_SECRET) {
+    console.error('❌ NEXTAUTH_SECRET is not defined in environment variables');
+    throw new Error('NEXTAUTH_SECRET must be defined in .env file');
+}
+
+if (!process.env.NEXTAUTH_URL) {
+    console.warn('⚠️ NEXTAUTH_URL is not defined, using default');
+}
+
+// Handle default exports properly for Next.js 15
+const NextAuth = NextAuthModule.default || NextAuthModule;
+const CredentialsProvider = CredentialsProviderModule.default || CredentialsProviderModule;
+const GoogleProvider = GoogleProviderModule.default || GoogleProviderModule;
 
 export const authOptions = {
     providers: [
@@ -109,7 +124,11 @@ export const authOptions = {
         maxAge: 30 * 24 * 60 * 60, // 30 days
     },
 
+    // CRITICAL: NEXTAUTH_SECRET is required for production
     secret: process.env.NEXTAUTH_SECRET,
+
+    // NEXTAUTH_URL for proper redirects
+    url: process.env.NEXTAUTH_URL,
 
     debug: process.env.NODE_ENV === 'development',
 };
