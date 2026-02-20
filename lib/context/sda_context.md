@@ -39,16 +39,49 @@ Data ini **tidak dapat di-join** dengan tabel lain.
 |------------------|----------------------------|---------------------------------------------------------------------------|
 | `id_absen`       | integer (PK)               | Primary key tabel.                                                        |
 | `nama_karyawan`  | varchar(255)               | Nama karyawan yang melakukan absen.                                       |
-| `jenis_absen`    | varchar(255)               | Jenis absensi (CHECK IN WFO/WFA/WFH, CHECK OUT, TERLAMBAT WFA/WFO/WFH).   |
-| `tanggal_absen`  | timestamp                  | Tanggal dan waktu absensi dilakukan. Gunakan hanya bagian tanggal.        |
-| `jam_check_in`   | time                       | Jam check-in (abaikan jika jenis_absen adalah CHECK OUT).                 |
-| `jam_check_out`  | time                       | Jam check-out (abaikan jika bukan CHECK OUT).                             |
-| `jumlah_jam`     | varchar(12) (nullable)     | Lama jam kerja. Jika null berarti belum check-out.                        |
-| `lokasi`         | varchar(255)               | Lokasi karyawan saat absensi.                                             |
-| `perangkat`      | varchar(255)               | Perangkat yang digunakan (MOBILE, DESKTOP).                               |
+| `jenis_absen`    | varchar(255)               | Jenis absensi. **Nilai enum yang PERSIS ada di database:** `'CHECK IN WFO'`, `'CHECK IN WFH'`, `'CHECK IN WFA'`, `'CHECK OUT'`, `'TERLAMBAT WFO'`, `'TERLAMBAT WFH'`, `'TERLAMBAT WFA'`. **JANGAN gunakan** `'CHECK IN'` atau `'TERLAMBAT'` saja — pasti 0 hasil! Gunakan `ILIKE '%CHECK IN%'` atau `ILIKE '%TERLAMBAT%'` untuk matching multi-tipe. |
+| `tanggal_absen`  | timestamp                  | Tanggal dan waktu absensi. **Rentang data tersedia: 2025-01-01 s/d 2025-12-31.** Untuk query rentang bulan, gunakan `BETWEEN '2025-01-01' AND '2025-12-31'` atau `EXTRACT(YEAR FROM tanggal_absen) = 2025`. **JANGAN gunakan `NOW()` karena data hanya sampai 2025!** |
+| `jam_check_in`   | time                       | Jam check-in. Tepat waktu = `jam_check_in <= '09:00:00'`. Terlambat = `jam_check_in > '09:00:00'`. |
+| `jam_check_out`  | time                       | Jam check-out (abaikan jika bukan CHECK OUT). |
+| `jumlah_jam`     | varchar(12) (nullable)     | Lama jam kerja. Jika null berarti belum check-out. |
+| `lokasi`         | varchar(255)               | Lokasi karyawan saat absensi. |
+| `perangkat`      | varchar(255)               | Perangkat yang digunakan (MOBILE, DESKTOP). |
 
-**SQL Hint:**  
-Gunakan `DATE_TRUNC('day', tanggal_absen)` untuk agregasi harian.
+**⚠️ CRITICAL SQL RULES untuk log_absen:**
+1. **jenis_absen** — SELALU gunakan `ILIKE '%CHECK IN%'` bukan `= 'CHECK IN'`
+2. **tanggal_absen** — Data hanya ada di tahun **2025**. Jangan pakai `NOW()` atau `CURRENT_DATE`. Gunakan `EXTRACT(YEAR FROM tanggal_absen) = 2025` atau rentang eksplisit.
+3. **Tepat waktu** = `jenis_absen ILIKE '%CHECK IN%' AND jam_check_in <= '09:00:00'`
+4. **Terlambat** = `jenis_absen ILIKE '%TERLAMBAT%'` (sudah terpisah dari CHECK IN)
+
+**SQL Hint — Karyawan Tepat Waktu:**
+```sql
+SELECT nama_karyawan, COUNT(*) AS jumlah_tepat_waktu
+FROM "SDA".log_absen
+WHERE jenis_absen ILIKE '%CHECK IN%'
+  AND jam_check_in <= '09:00:00'
+  AND EXTRACT(YEAR FROM tanggal_absen) = 2025
+GROUP BY nama_karyawan
+ORDER BY jumlah_tepat_waktu DESC
+LIMIT 100;
+```
+
+**SQL Hint — Karyawan Sering Terlambat:**
+```sql
+SELECT nama_karyawan, COUNT(*) AS jumlah_terlambat
+FROM "SDA".log_absen
+WHERE jenis_absen ILIKE '%TERLAMBAT%'
+  AND EXTRACT(YEAR FROM tanggal_absen) = 2025
+GROUP BY nama_karyawan
+ORDER BY jumlah_terlambat DESC
+LIMIT 100;
+```
+
+**SQL Hint per bulan (gunakan angka bulan eksplisit):**
+```sql
+-- Contoh: bulan Januari 2025
+WHERE EXTRACT(YEAR FROM tanggal_absen) = 2025
+  AND EXTRACT(MONTH FROM tanggal_absen) = 1
+```
 
 ---
 

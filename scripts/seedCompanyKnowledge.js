@@ -1,7 +1,7 @@
 import crypto from 'crypto';
-import { ensureCollection, upsertPoints } from '../lib/rag/qdrantClient.js';
+import { ensureCollection, upsertPoints } from '../lib/layers/phase2-pipes/shared/qdrantClient.js';
 import { loadCompanyDocs } from '../lib/rag/documentLoader.js';
-import { getEmbedding } from '../lib/rag/vectorStoreService.js';
+import { getEmbedding } from '../lib/layers/phase2-pipes/shared/vectorStoreService.js';
 
 /**
  * Seed Company Knowledge Collection

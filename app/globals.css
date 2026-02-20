@@ -3,6 +3,7 @@
  * Menggunakan Tailwind CSS dan custom styles
  */
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 /* Custom scrollbar */
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;

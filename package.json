@@ -14,6 +14,7 @@
     "seed:insights": "node --env-file=.env scripts/seedAggregatedInsights.js",
     "seed:knowledge": "node --env-file=.env scripts/seedCompanyKnowledge.js",
     "seed:sda": "node --env-file=.env scripts/seedSDAData.js",
+    "seed:intents": "node --env-file=.env scripts/seedIntentClassification.js",
     "seed:all": "npm run seed:schema && npm run seed:insights && npm run seed:knowledge"
   },
   "dependencies": {
@@ -21,6 +22,7 @@
     "@modelcontextprotocol/sdk": "^1.20.0",
     "@openrouter/sdk": "^0.3.11",
     "@qdrant/js-client-rest": "^1.11.0",
+    "@tailwindcss/typography": "^0.5.19",
     "autoprefixer": "^10.4.21",
     "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
@@ -33,8 +35,12 @@
     "postcss": "^8.5.6",
     "react": "19.1.0",
     "react-dom": "19.1.0",
+    "react-markdown": "^10.1.0",
+    "react-syntax-highlighter": "^16.1.0",
     "recharts": "^3.6.0",
-    "simple-statistics": "^7.8.3"
+    "remark-gfm": "^4.0.1",
+    "simple-statistics": "^7.8.3",
+    "tailwind-merge": "^3.4.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MyChat — Alur Sistem Lengkap</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap');
+
+  :root {
+    --bg: #0d0f14;
+    --surface: #13161e;
+    --surface2: #1a1e2a;
+    --border: #252a38;
+    --phase0: #7c3aed;
+    --phase0-soft: #1e1030;
+    --phase1: #0ea5e9;
+    --phase1-soft: #071929;
+    --phase2p: #10b981;
+    --phase2p-soft: #071a13;
+    --phase2d: #f59e0b;
+    --phase2d-soft: #1c1407;
+    --phase2h: #ec4899;
+    --phase2h-soft: #1c0711;
+    --phase3: #f97316;
+    --phase3-soft: #1c0e03;
+    --error: #ef4444;
+    --error-soft: #1c0707;
+    --text: #e2e8f0;
+    --text-dim: #64748b;
+    --text-muted: #94a3b8;
+    --arrow: #334155;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    padding: 40px 20px;
+  }
+
+  .page-title {
+    text-align: center;
+    margin-bottom: 60px;
+  }
+
+  .page-title h1 {
+    font-size: 2.8rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    background: linear-gradient(135deg, #7c3aed, #0ea5e9, #10b981);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 8px;
+  }
+
+  .page-title p {
+    color: var(--text-dim);
+    font-size: 0.9rem;
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  /* OVERVIEW FLOW */
+  .overview {
+    max-width: 900px;
+    margin: 0 auto 80px;
+  }
+
+  .section-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* FLOW NODES */
+  .flow-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+  }
+
+  .node {
+    position: relative;
+    border-radius: 12px;
+    padding: 14px 24px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-align: center;
+    min-width: 200px;
+    border: 1px solid;
+    transition: all 0.2s;
+    cursor: default;
+    z-index: 1;
+  }
+
+  .node:hover { transform: translateY(-2px); filter: brightness(1.1); }
+
+  .node.start { background: var(--surface2); border-color: var(--border); color: var(--text-muted); min-width: 140px; font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; }
+
+  .node.phase0 { background: var(--phase0-soft); border-color: var(--phase0); color: #c4b5fd; }
+  .node.phase1 { background: var(--phase1-soft); border-color: var(--phase1); color: #7dd3fc; }
+  .node.phase2p { background: var(--phase2p-soft); border-color: var(--phase2p); color: #6ee7b7; }
+  .node.phase2d { background: var(--phase2d-soft); border-color: var(--phase2d); color: #fcd34d; }
+  .node.phase2h { background: var(--phase2h-soft); border-color: var(--phase2h); color: #f9a8d4; }
+  .node.phase3 { background: var(--phase3-soft); border-color: var(--phase3); color: #fdba74; }
+  .node.error-node { background: var(--error-soft); border-color: var(--error); color: #fca5a5; font-size: 0.8rem; min-width: 160px; }
+  .node.cache { background: #0f1f1a; border-color: #059669; color: #6ee7b7; font-size: 0.8rem; }
+  .node.decision { background: var(--surface2); border-color: #475569; color: var(--text-muted); font-size: 0.82rem; min-width: 180px; border-style: dashed; }
+
+  /* ARROWS */
+  .arrow {
+    width: 2px;
+    background: var(--border);
+    height: 32px;
+    position: relative;
+    margin: 0 auto;
+  }
+
+  .arrow::after {
+    content: '▼';
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: var(--text-dim);
+    font-size: 0.7rem;
+  }
+
+  .arrow.colored-phase0 { background: var(--phase0); }
+  .arrow.colored-phase0::after { color: var(--phase0); }
+  .arrow.colored-phase1 { background: var(--phase1); }
+  .arrow.colored-phase1::after { color: var(--phase1); }
+  .arrow.colored-phase3 { background: var(--phase3); }
+  .arrow.colored-phase3::after { color: var(--phase3); }
+
+  /* PHASE SECTIONS */
+  .phase-section {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto 60px;
+  }
+
+  .phase-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .phase-badge {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    padding: 4px 12px;
+    border-radius: 100px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .phase-badge.p0 { background: var(--phase0-soft); color: var(--phase0); border: 1px solid var(--phase0); }
+  .phase-badge.p1 { background: var(--phase1-soft); color: var(--phase1); border: 1px solid var(--phase1); }
+  .phase-badge.p2 { background: var(--surface2); color: var(--text-muted); border: 1px solid var(--border); }
+  .phase-badge.p3 { background: var(--phase3-soft); color: var(--phase3); border: 1px solid var(--phase3); }
+
+  .phase-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .phase-desc {
+    font-size: 0.82rem;
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace;
+    margin-left: auto;
+  }
+
+  /* PIPE BOXES */
+  .pipes-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 24px;
+    margin-top: 8px;
+  }
+
+  .pipe-box {
+    border-radius: 16px;
+    padding: 24px;
+    border: 1px solid;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .pipe-box::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+
+  .pipe-box.policy { background: var(--phase2p-soft); border-color: var(--phase2p); }
+  .pipe-box.policy::before { background: var(--phase2p); }
+  .pipe-box.database { background: var(--phase2d-soft); border-color: var(--phase2d); }
+  .pipe-box.database::before { background: var(--phase2d); }
+  .pipe-box.hybrid { background: var(--phase2h-soft); border-color: var(--phase2h); }
+  .pipe-box.hybrid::before { background: var(--phase2h); }
+
+  .pipe-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .pipe-title.policy { color: var(--phase2p); }
+  .pipe-title.database { color: var(--phase2d); }
+  .pipe-title.hybrid { color: var(--phase2h); }
+
+  .pipe-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .pipe-step {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    position: relative;
+  }
+
+  .pipe-step .step-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    display: block;
+    margin-bottom: 2px;
+  }
+
+  .pipe-step.error-step {
+    background: var(--error-soft);
+    border-color: var(--error);
+    color: #fca5a5;
+    font-size: 0.78rem;
+  }
+
+  .pipe-step.success-step {
+    background: rgba(16,185,129,0.08);
+    border-color: rgba(16,185,129,0.3);
+    color: #6ee7b7;
+  }
+
+  .pipe-arrow {
+    width: 1px;
+    height: 20px;
+    background: var(--border);
+    margin: 0 auto;
+    position: relative;
+  }
+
+  .pipe-arrow::after {
+    content: '↓';
+    position: absolute;
+    bottom: -4px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: var(--text-dim);
+    font-size: 0.65rem;
+  }
+
+  .pipe-branch {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+
+  .branch-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    padding: 2px 6px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    white-space: nowrap;
+    margin-top: 2px;
+  }
+
+  .branch-label.yes { border-color: #10b981; color: #10b981; }
+  .branch-label.no { border-color: #ef4444; color: #ef4444; }
+
+  /* INTENT GRID */
+  .intent-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin-top: 16px;
+  }
+
+  .intent-tag {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 0.75rem;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text-muted);
+    text-align: center;
+  }
+
+  .intent-tag.policy-tag { border-color: rgba(124,58,237,0.5); color: #c4b5fd; background: rgba(124,58,237,0.08); }
+  .intent-tag.db-tag { border-color: rgba(245,158,11,0.5); color: #fcd34d; background: rgba(245,158,11,0.08); }
+  .intent-tag.hybrid-tag { border-color: rgba(236,72,153,0.5); color: #f9a8d4; background: rgba(236,72,153,0.08); }
+  .intent-tag.general-tag { border-color: rgba(100,116,139,0.5); color: #94a3b8; background: rgba(100,116,139,0.08); }
+
+  /* DETAIL FLOW CARDS */
+  .detail-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 16px;
+  }
+
+  .detail-flow {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+    max-width: 700px;
+  }
+
+  .detail-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    width: 100%;
+  }
+
+  .step-connector {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+    width: 28px;
+  }
+
+  .step-dot {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .step-line {
+    width: 2px;
+    flex: 1;
+    min-height: 24px;
+    background: var(--border);
+    margin: 4px 0;
+  }
+
+  .step-content {
+    padding: 4px 0 20px;
+    flex: 1;
+  }
+
+  .step-title {
+    font-size: 0.88rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  .step-detail {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace;
+    line-height: 1.6;
+  }
+
+  .step-tag {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-top: 6px;
+    margin-right: 4px;
+  }
+
+  /* PHASE 3 */
+  .phase3-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  .reranker-explain {
+    max-width: 1200px;
+    margin: -20px auto 48px;
+    background: linear-gradient(135deg, rgba(16,185,129,0.06), rgba(14,165,233,0.06));
+    border: 1px solid rgba(16,185,129,0.25);
+    border-radius: 16px;
+    padding: 24px 32px;
+    display: grid;
+    grid-template-columns: auto 1fr 1fr 1fr;
+    gap: 24px;
+    align-items: center;
+  }
+
+  .reranker-icon {
+    font-size: 2rem;
+    line-height: 1;
+  }
+
+  .reranker-col-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+
+  .reranker-col-val {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 60px;
+    padding-top: 32px;
+    border-top: 1px solid var(--border);
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.78rem;
+    color: var(--text-dim);
+  }
+
+  .legend-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+  }
+
+  /* CONNECTOR BETWEEN SECTIONS */
+  .section-connector {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 8px auto;
+    gap: 4px;
+  }
+
+  .connector-line {
+    width: 2px;
+    height: 40px;
+    background: linear-gradient(to bottom, var(--border), transparent);
+  }
+
+  .connector-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    background: var(--bg);
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+
+  /* OVERVIEW MINI FLOW */
+  .overview-flow {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .overview-flow::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 0%, rgba(124,58,237,0.05) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .ov-node {
+    padding: 12px 32px;
+    border-radius: 10px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    text-align: center;
+    min-width: 220px;
+    border: 1px solid;
+    position: relative;
+    z-index: 1;
+  }
+
+  .ov-split {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    position: relative;
+    z-index: 1;
+  }
+
+  .ov-split-line {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2px;
+    height: 32px;
+    background: var(--border);
+  }
+
+  .ov-h-line {
+    position: absolute;
+    top: 32px;
+    height: 2px;
+    background: var(--border);
+  }
+
+  .split-wrapper {
+    position: relative;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .split-row {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .ov-arrow-down {
+    width: 2px;
+    height: 28px;
+    background: var(--border);
+    position: relative;
+    margin: 0 auto;
+  }
+
+  .ov-arrow-down::after {
+    content: '▼';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.6rem;
+    color: var(--text-dim);
+  }
+</style>
+</head>
+<body>
+
+<div class="page-title">
+  <h1>MyChat — Alur Sistem Lengkap</h1>
+  <p>Architecture Flow v2.1 · With Cross-Encoder Reranker</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- OVERVIEW -->
+<!-- ═══════════════════════════════════════════════════ -->
+<div class="overview">
+  <div class="section-label">Overview Alur Keseluruhan</div>
+  <div class="overview-flow">
+    <div class="ov-node start" style="background:var(--surface2);border-color:var(--border);color:var(--text-muted);font-family:'JetBrains Mono',monospace;font-size:0.78rem;min-width:140px;">
+      USER INPUT
+    </div>
+    <div class="ov-arrow-down"></div>
+
+    <div class="ov-node" style="background:var(--phase0-soft);border-color:var(--phase0);color:#c4b5fd;">
+      Phase 0 · User Chat Processing
+    </div>
+    <div class="ov-arrow-down"></div>
+
+    <div class="ov-node" style="background:var(--phase1-soft);border-color:var(--phase1);color:#7dd3fc;">
+      Phase 1 · Intent + Domain Classification
+    </div>
+    <div style="height:12px;"></div>
+
+    <!-- Branch decision -->
+    <div style="font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--text-dim);background:var(--surface2);border:1px dashed var(--border);border-radius:6px;padding:6px 16px;margin-bottom:12px;">
+      ◆ confidence ≥ threshold?
+    </div>
+
+    <div class="split-row" style="margin-bottom:12px;">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:#ef4444;">✗ TIDAK</span>
+        <div class="ov-node error-node" style="background:var(--error-soft);border-color:var(--error);color:#fca5a5;font-size:0.78rem;min-width:150px;padding:10px 16px;">
+          Clarification<br>ke User
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:6px;">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:#10b981;">✓ YA</span>
+        <div class="ov-node" style="background:var(--surface2);border-color:var(--border);color:var(--text-muted);font-size:0.78rem;min-width:150px;padding:10px 16px;border-style:dashed;">
+          Lanjut ke Pipe
+        </div>
+      </div>
+    </div>
+
+    <div class="split-row" style="margin-bottom:8px;">
+      <div class="ov-node" style="background:var(--phase2p-soft);border-color:var(--phase2p);color:#6ee7b7;font-size:0.8rem;min-width:170px;padding:10px;">Policy Pipe</div>
+      <div class="ov-node" style="background:var(--phase2d-soft);border-color:var(--phase2d);color:#fcd34d;font-size:0.8rem;min-width:170px;padding:10px;">Database Pipe</div>
+      <div class="ov-node" style="background:var(--phase2h-soft);border-color:var(--phase2h);color:#f9a8d4;font-size:0.8rem;min-width:170px;padding:10px;">Hybrid Pipe</div>
+    </div>
+    <div class="ov-arrow-down"></div>
+
+    <div class="ov-node" style="background:var(--phase3-soft);border-color:var(--phase3);color:#fdba74;">
+      Phase 3 · LLM Reasoning + Response Generation
+    </div>
+    <div class="ov-arrow-down"></div>
+
+    <div class="ov-node" style="background:rgba(5,150,105,0.1);border-color:#059669;color:#6ee7b7;font-size:0.82rem;">
+      ✦ Save to Semantic Cache → Return ke User
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- PHASE 0 -->
+<!-- ═══════════════════════════════════════════════════ -->
+<div class="phase-section">
+  <div class="phase-header">
+    <span class="phase-badge p0">Phase 0</span>
+    <span class="phase-title">User Chat Processing</span>
+    <span class="phase-desc">query_preprocessing</span>
+  </div>
+
+  <div class="detail-card">
+    <div class="detail-flow">
+
+      <div class="detail-step">
+        <div class="step-connector">
+          <div class="step-dot" style="background:rgba(124,58,237,0.2);border:1px solid var(--phase0);color:#c4b5fd;">1</div>
+          <div class="step-line"></div>
+        </div>
+        <div class="step-content">
+          <div class="step-title" style="color:#c4b5fd;">Load Chat History (Configurable)</div>
+          <div class="step-detail">Ambil N pesan terakhir dari session store<br>
+          default: 6 pesan (3 user + 3 assistant)<br>
+          max: 20 pesan (10 user + 10 assistant) · settable dari admin panel<br>
+          format: Tiered Memory → immediate window + episodic summary</div>
+          <span class="step-tag" style="background:rgba(124,58,237,0.1);color:#c4b5fd;border:1px solid rgba(124,58,237,0.3);">Redis / In-Memory Store</span>
+        </div>
+      </div>
+
+      <div class="detail-step">
+        <div class="step-connector">
+          <div class="step-dot" style="background:rgba(124,58,237,0.2);border:1px solid var(--phase0);color:#c4b5fd;">2</div>
+          <div class="step-line"></div>
+        </div>
+        <div class="step-content">
+          <div class="step-title" style="color:#c4b5fd;">Question Rewrite (LLM)</div>
+          <div class="step-detail">Input: history + user last message<br>
+          Model: Ollama lokal (efisiensi · tidak perlu model besar)<br>
+          Output: standalone question yang self-contained<br>
+          → sebutkan entitas eksplisit (nama, periode, departemen, metrik)<br>
+          → hilangkan ambiguitas referensial ("itu", "dia", "yang tadi")<br>
+          → tidak bergantung pada history untuk dipahami</div>
+          <span class="step-tag" style="background:rgba(124,58,237,0.1);color:#c4b5fd;border:1px solid rgba(124,58,237,0.3);">ollama · model ringan</span>
+        </div>
+      </div>
+
+      <div class="detail-step">
+        <div class="step-connector">
+          <div class="step-dot" style="background:rgba(124,58,237,0.2);border:1px solid var(--phase0);color:#c4b5fd;">→</div>
+        </div>
+        <div class="step-content">
+          <div class="step-title" style="color:#c4b5fd;">Output: Final Question</div>
+          <div class="step-detail">Query yang sudah bersih, eksplisit, dan siap diklasifikasi</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- PHASE 1 -->
+<!-- ═══════════════════════════════════════════════════ -->
+<div class="phase-section">
+  <div class="phase-header">
+    <span class="phase-badge p1">Phase 1</span>
+    <span class="phase-title">Intent + Domain Classification</span>
+    <span class="phase-desc">intent_routing</span>
+  </div>
+
+  <div class="detail-card">
+    <div class="detail-flow">
+
+      <div class="detail-step">
+        <div class="step-connector">
+          <div class="step-dot" style="background:rgba(14,165,233,0.2);border:1px solid var(--phase1);color:#7dd3fc;">1</div>
+          <div class="step-line"></div>
+        </div>
+        <div class="step-content">
+          <div class="step-title" style="color:#7dd3fc;">LLM Intent + Domain Classifier</div>
+          <div class="step-detail">Input: Final Question (dari Phase 0)<br>
+          Model: Gemini 1.5 Flash (cepat, structured output)<br>
+          Output JSON: { intent, confidence: 0-1, reasoning, entities }</div>
+          <span class="step-tag" style="background:rgba(14,165,233,0.1);color:#7dd3fc;border:1px solid rgba(14,165,233,0.3);">gemini-1.5-flash · temp: 0.0</span>
+        </div>
+      </div>
+
+      <div class="detail-step">
+        <div class="step-connector">
+          <div class="step-dot" style="background:rgba(14,165,233,0.2);border:1px solid var(--phase1);color:#7dd3fc;">2</div>
+          <div class="step-line"></div>
+        </div>
+        <div class="step-content">
+          <div class="step-title" style="color:#7dd3fc;">Validation & Confidence Check</div>
+          <div class="step-detail">jika confidence &lt; 0.75 → kirim clarification question ke user (STOP)<br>
+          jika confidence ≥ 0.75 → lanjut ke Router<br>
+          fallback: jika LLM gagal 2x → default ke HYBRID sebagai safety net</div>
+          <span class="step-tag" style="background:var(--error-soft);color:#fca5a5;border:1px solid var(--error);">conf &lt; 0.75 → STOP</span>
+          <span class="step-tag" style="background:rgba(16,185,129,0.08);color:#6ee7b7;border:1px solid rgba(16,185,129,0.3);">conf ≥ 0.75 → lanjut</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Intent Labels -->
+    <div style="margin-top:24px;">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--text-dim);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.1em;">Output Labels yang Tersedia:</div>
+      <div class="intent-grid">
+        <div class="intent-tag general-tag">General</div>
+        <div class="intent-tag policy-tag">Policy_Descriptive</div>
+        <div class="intent-tag policy-tag">Policy_Diagnostic</div>
+        <div class="intent-tag db-tag">Data_Descriptive</div>
+        <div class="intent-tag db-tag">Data_Diagnostic</div>
+        <div class="intent-tag db-tag">Data_Predictive</div>
+        <div class="intent-tag db-tag">Data_Recommendation</div>
+        <div class="intent-tag hybrid-tag">Hybrid_Descriptive</div>
+        <div class="intent-tag hybrid-tag">Hybrid_Diagnostic</div>
+        <div class="intent-tag hybrid-tag">Hybrid_Recommendation</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- PHASE 2: PIPES -->
+<!-- ═══════════════════════════════════════════════════ -->
+<div class="phase-section">
+  <div class="phase-header">
+    <span class="phase-badge p2">Phase 2</span>
+    <span class="phase-title">Pipe Execution</span>
+    <span class="phase-desc">retrieval + reranker + sql_generation</span>
+  </div>
+
+  <div class="pipes-grid">
+
+    <!-- POLICY PIPE -->
+    <div class="pipe-box policy">
+      <div class="pipe-title policy">⬡ Policy Pipe</div>
+      <div class="pipe-steps">
+
+        <div class="pipe-step" style="color:#6ee7b7;">
+          <span class="step-num">STEP 1</span>
+          Embed Final Question
+          <div style="font-size:0.72rem;color:var(--text-dim);margin-top:3px;">text-embedding model</div>
+        </div>
+        <div class="pipe-arrow"></div>
+
+        <div class="pipe-step" style="color:#6ee7b7;">
+          <span class="step-num">STEP 2</span>
+          Qdrant Search (Bi-Encoder)
+          <div style="font-size:0.72rem;color:var(--text-dim);margin-top:3px;">collection: company_policy<br>top_k: <strong style="color:#6ee7b7;">20</strong> · score_threshold: 0.6<br><em style="color:#475569;">ambil kandidat lebih banyak untuk reranker</em></div>
+        </div>
+        <div class="pipe-arrow"></div>
+
+        <div class="pipe-step" style="color:#6ee7b7;background:rgba(16,185,129,0.12);border:1.5px solid #10b981;position:relative;">
+          <div style="position:absolute;top:-8px;right:8px;background:#10b981;color:#000;font-family:'JetBrains Mono',monospace;font-size:0.6rem;font-weight:700;padding:2px 8px;border-radius:4px;letter-spacing:0.08em;">RERANKER</div>
+          <span class="step-num">STEP 3</span>
+          Cross-Encoder Reranking
+          <div style="font-size:0.72rem;color:var(--text-dim);margin-top:3px;">
+            model: <strong style="color:#6ee7b7;">cross-encoder/ms-marco-MiniLM-L-6-v2</strong><br>
+            input: 20 kandidat dari Qdrant<br>
+            score setiap pasang (query, chunk) secara joint<br>
+            urutkan ulang berdasarkan skor relevansi sejati<br>
+            ambil <strong style="color:#6ee7b7;">top-5</strong> hasil reranking
+          </div>
+        </div>
+        <div class="pipe-arrow"></div>
+
+        <div class="pipe-step" style="color:#6ee7b7;">
+          <span class="step-num">STEP 4</span>
+          Relevance Threshold Check
+          <div style="font-size:0.72rem;color:var(--text-dim);margin-top:3px;">skor reranker top-1 ≥ 0.5?<br>jika tidak → hasil dianggap tidak relevan</div>
+        </div>
+        <div class="pipe-arrow"></div>
+
+        <div class="pipe-branch">
+          <div style="flex:1;">
+            <div class="branch-label no" style="margin-bottom:4px;">✗ skor &lt; 0.5</div>
+            <div class="pipe-step error-step">Return: "Informasi policy tidak ditemukan"</div>
+          </div>
+          <div style="flex:1;">
+            <div class="branch-label yes" style="margin-bottom:4px;">✓ skor ≥ 0.5</div>
+            <div class="pipe-step success-step">Top-5 Policy Chunks siap</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- DATABASE PIPE -->
+    <div class="pipe-box database">
+      <div class="pipe-title database">⬡ Database Pipe</div>
+      <div class="pipe-steps">
+
+        <div class="pipe-step" style="color:#fcd34d;">
+          <span class="step-num">STEP 1</span>
+          Table Identification
+          <div style="font-size:0.72rem;color:var(--text-dim);margin-top:3px;">LLM identifikasi tabel relevan dari Schema Registry</div>
+        </div>
+        <div class="pipe-arrow"></div>
+
+        <div class="pipe-step" style="color:#fcd34d;">
+          <span class="step-num">STEP 2</span>
+          Schema Grounding — Qdrant Search
+          <div style="font-size:0.72rem;color:var(--text-dim);margin-top:3px;">Ambil kandidat schema dari Qdrant (db_schema collection)<br>top_k: <strong style="color:#fcd34d;">20</strong> · cari definisi tabel + kolom yang relevan</div>
+        </div>
+        <div class="pipe-arrow"></div>
+
+        <div class="pipe-step" style="color:#fcd34d;background:rgba(245,158,11,0.12);border:1.5px solid #f59e0b;position:relative;">
+          <div style="position:absolute;top:-8px;right:8px;background:#f59e0b;color:#000;font-family:'JetBrains Mono',monospace;font-size:0.6rem;font-weight:700;padding:2px 8px;border-radius:4px;letter-spacing:0.08em;">RERANKER</div>
+          <span class="step-num">STEP 3</span>
+          Cross-Encoder Reranking (Schema)
+          <div style="font-size:0.72rem;color:var(--text-dim);margin-top:3px;">
+            model: <strong style="color:#fcd34d;">cross-encoder/ms-marco-MiniLM-L-6-v2</strong><br>
+            nilai relevansi tiap schema chunk terhadap query<br>
+            prioritaskan tabel + kolom yang paling mungkin dibutuhkan SQL<br>
+            ambil <strong style="color:#fcd34d;">top-5</strong> schema chunks terpilih
+          </div>
+        </div>
+        <div class="pipe-arrow"></div>
+
+        <div class="pipe-step" style="color:#fcd34d;">
+          <span class="step-num">STEP 4</span>
+          SQL Generation (LLM)
+          <div style="font-size:0.72rem;color:var(--text-dim);margin-top:3px;">gemini-1.5-pro · temp: 0.0<br>prompt: reranked schema chunks + contoh query</div>
+        </div>
+        <div class="pipe-arrow"></div>
+
+        <div class="pipe-step" style="color:#fcd34d;">
+          <span class="step-num">STEP 5</span>
+          SQL Validation
+          <div style="font-size:0.72rem;color:var(--text-dim);margin-top:3px;">cek: tabel valid? kolom ada? no DELETE/DROP?<br>node-sql-parser</div>
+        </div>
+        <div class="pipe-arrow"></div>
+
+        <div class="pipe-branch">
+          <div style="flex:1;">
+            <div class="branch-label no" style="margin-bottom:4px;">✗ invalid</div>
+            <div class="pipe-step error-step">Regenerate + error feedback (max 3x)</div>
+            <div style="height:4px;"></div>
+            <div class="pipe-step error-step" style="font-size:0.72rem;">Gagal 3x → return error message</div>
+          </div>
+          <div style="flex:1;">
+            <div class="branch-label yes" style="margin-bottom:4px;">✓ valid</div>
+            <div class="pipe-step success-step">SQL Execute (read-only user)</div>
+            <div style="height:4px;"></div>
+            <div class="pipe-step success-step">Query Results siap</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- HYBRID PIPE -->
+    <div class="pipe-box hybrid">
+      <div class="pipe-title hybrid">⬡ Hybrid Pipe</div>
+      <div class="pipe-steps">
+
+        <div class="pipe-step" style="color:#f9a8d4;">
+          <span class="step-num">STEP 1</span>
+          Query Decomposition (LLM)
+          <div style="font-size:0.72rem;color:var(--text-dim);margin-top:3px;">pisah jadi 2 sub-query:<br>sub_query_db + sub_query_policy</div>
+        </div>
+        <div class="pipe-arrow"></div>
+
+        <div class="pipe-step" style="color:#f9a8d4;">
+          <span class="step-num">STEP 2</span>
+          Parallel Execution (dengan Reranker)
+          <div style="font-size:0.72rem;color:var(--text-dim);margin-top:3px;">jalankan Database Pipe + Policy Pipe secara bersamaan (Promise.all)<br><strong style="color:#f9a8d4;">masing-masing pipe sudah include cross-encoder reranking</strong></div>
+        </div>
+        <div class="pipe-arrow"></div>
+
+        <div class="pipe-step" style="color:#f9a8d4;">
+          <span class="step-num">STEP 3</span>
+          Error Check per Pipe
+          <div style="font-size:0.72rem;color:var(--text-dim);margin-top:3px;">jika salah satu gagal → lanjut dengan partial context<br>jika keduanya gagal → return error</div>
+        </div>
+        <div class="pipe-arrow"></div>
+
+        <div class="pipe-step success-step" style="color:#f9a8d4;background:rgba(236,72,153,0.08);border-color:rgba(236,72,153,0.3);">
+          <span class="step-num">STEP 4</span>
+          Context Fusion
+          <div style="font-size:0.72rem;color:var(--text-dim);margin-top:3px;">gabung: query_results + policy_chunks<br>dengan role assignment yang jelas</div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- RERANKER CALLOUT -->
+<!-- ═══════════════════════════════════════════════════ -->
+<div class="reranker-explain">
+  <div class="reranker-icon">⚖️</div>
+  <div>
+    <div class="reranker-col-title">Model yang Digunakan</div>
+    <div class="reranker-col-val" style="color:#6ee7b7;">cross-encoder/ms-marco-MiniLM-L-6-v2<br><span style="color:var(--text-dim);font-size:0.75rem;">via HuggingFace · dapat dijalankan lokal</span></div>
+  </div>
+  <div>
+    <div class="reranker-col-title">Cara Kerja vs Bi-Encoder</div>
+    <div class="reranker-col-val">Bi-encoder (Qdrant): embed query & doc terpisah → cosine similarity <em style="color:var(--text-dim);">cepat tapi kasar</em><br>Cross-encoder: baca (query + doc) secara joint → skor relevansi <em style="color:#6ee7b7);">lambat tapi akurat</em></div>
+  </div>
+  <div>
+    <div class="reranker-col-title">Strategi top-k</div>
+    <div class="reranker-col-val">Qdrant ambil <strong style="color:#fcd34d;">top-20</strong> kandidat kasar<br>Reranker seleksi jadi <strong style="color:#6ee7b7;">top-5</strong> berkualitas tinggi<br><span style="color:var(--text-dim);font-size:0.75rem;">trade-off: +latency ~50-150ms · kualitas meningkat signifikan</span></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- PHASE 3 -->
+<!-- ═══════════════════════════════════════════════════ -->
+<div class="phase-section">
+  <div class="phase-header">
+    <span class="phase-badge p3">Phase 3</span>
+    <span class="phase-title">LLM Reasoning + Response Generation</span>
+    <span class="phase-desc">final_synthesis</span>
+  </div>
+
+  <div class="phase3-grid">
+
+    <div class="detail-card">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--phase3);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:16px;">Step 1 · Context Assembly</div>
+      <div class="detail-flow">
+        <div class="detail-step">
+          <div class="step-connector">
+            <div class="step-dot" style="background:rgba(249,115,22,0.2);border:1px solid var(--phase3);color:#fdba74;font-size:0.6rem;">A</div>
+            <div class="step-line" style="height:16px;"></div>
+          </div>
+          <div class="step-content" style="padding-bottom:12px;">
+            <div class="step-title" style="color:#fdba74;font-size:0.82rem;">Structured Context Fusion</div>
+            <div class="step-detail">
+              [DATA DARI DATABASE] → fakta objektif<br>
+              [KEBIJAKAN PERUSAHAAN] → standar evaluasi<br>
+              [CONVERSATION CONTEXT] → history relevan<br>
+              [INSTRUKSI ANALISIS] → intent + output schema
+            </div>
+          </div>
+        </div>
+        <div class="detail-step">
+          <div class="step-connector">
+            <div class="step-dot" style="background:rgba(249,115,22,0.2);border:1px solid var(--phase3);color:#fdba74;font-size:0.6rem;">B</div>
+          </div>
+          <div class="step-content" style="padding-bottom:0;">
+            <div class="step-title" style="color:#fdba74;font-size:0.82rem;">Temperature per Intent</div>
+            <div class="step-detail">
+              Descriptive / Diagnostic → 0.0–0.1<br>
+              Recommendation → 0.3<br>
+              Predictive → 0.1<br>
+              General → 0.4
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-card">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--phase3);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:16px;">Step 2 · LLM Thinking (Chain-of-Thought)</div>
+      <div style="font-size:0.8rem;color:var(--text-dim);line-height:1.7;font-family:'JetBrains Mono',monospace;">
+        Model: gemini-1.5-pro<br>
+        Teknik: Chain-of-Thought reasoning<br><br>
+        LLM diminta berpikir dulu:<br>
+        1. Apa fakta dari data?<br>
+        2. Apa standar dari policy?<br>
+        3. Apa gap antara keduanya?<br>
+        4. Apa akar masalah / rekomendasi?<br><br>
+        <span style="color:var(--phase3);">→ Thinking result dikirim ke Step 3</span>
+      </div>
+    </div>
+
+    <div class="detail-card">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--phase3);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:16px;">Step 3 · Intent-based Output Schema</div>
+      <div style="font-size:0.78rem;color:var(--text-dim);line-height:1.8;font-family:'JetBrains Mono',monospace;">
+        <span style="color:#c4b5fd;">Descriptive:</span> Kondisi Aktual + Ringkasan Data<br>
+        <span style="color:#7dd3fc;">Diagnostic:</span> Temuan + Akar Masalah (Why)<br>
+        <span style="color:#fcd34d;">Recommendation:</span> Temuan + Saran + Dasar Policy<br>
+        <span style="color:#f9a8d4;">Predictive:</span> Tren + Proyeksi + Confidence<br>
+        <span style="color:#6ee7b7;">Hybrid:</span> Gabungan sesuai sub-intent
+      </div>
+    </div>
+
+    <div class="detail-card">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--phase3);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:16px;">Step 4 · Post-Processing</div>
+      <div class="detail-flow">
+        <div class="detail-step">
+          <div class="step-connector">
+            <div class="step-dot" style="background:rgba(249,115,22,0.2);border:1px solid var(--phase3);color:#fdba74;font-size:0.6rem;">1</div>
+            <div class="step-line" style="height:14px;"></div>
+          </div>
+          <div class="step-content" style="padding-bottom:10px;">
+            <div style="font-size:0.8rem;color:var(--text-muted);">Save response ke Semantic Cache (Qdrant)</div>
+          </div>
+        </div>
+        <div class="detail-step">
+          <div class="step-connector">
+            <div class="step-dot" style="background:rgba(249,115,22,0.2);border:1px solid var(--phase3);color:#fdba74;font-size:0.6rem;">2</div>
+            <div class="step-line" style="height:14px;"></div>
+          </div>
+          <div class="step-content" style="padding-bottom:10px;">
+            <div style="font-size:0.8rem;color:var(--text-muted);">Update session history + entity tracking</div>
+          </div>
+        </div>
+        <div class="detail-step">
+          <div class="step-connector">
+            <div class="step-dot" style="background:rgba(5,150,105,0.2);border:1px solid #059669;color:#6ee7b7;font-size:0.6rem;">✓</div>
+          </div>
+          <div class="step-content" style="padding-bottom:0;">
+            <div style="font-size:0.8rem;color:#6ee7b7;">Return final response ke User</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- LEGEND -->
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#10b981;border-radius:2px;border:1px solid #059669;"></div> Cross-Encoder Reranker</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--phase0);"></div> Phase 0: User Processing</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--phase1);"></div> Phase 1: Intent Classification</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--phase2p);"></div> Policy Pipe</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--phase2d);"></div> Database Pipe</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--phase2h);"></div> Hybrid Pipe</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--phase3);"></div> Phase 3: Response Generation</div>
+  <div class="legend-item"><div class="legend-dot" style="background:var(--error);"></div> Error / Fallback Path</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#059669;"></div> Success / Cache</div>
+</div>
+
+</body>
+</html>
