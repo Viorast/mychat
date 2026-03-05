@@ -11,11 +11,12 @@
     "lint": "eslint",
     "verify-db": "node scripts/verify-database.js",
     "seed:schema": "node --env-file=.env scripts/seedSchemaContext.js",
+    "seed:dvo": "node --env-file=.env scripts/seedDvoContext.js",
     "seed:insights": "node --env-file=.env scripts/seedAggregatedInsights.js",
     "seed:knowledge": "node --env-file=.env scripts/seedCompanyKnowledge.js",
     "seed:sda": "node --env-file=.env scripts/seedSDAData.js",
     "seed:intents": "node --env-file=.env scripts/seedIntentClassification.js",
-    "seed:all": "npm run seed:schema && npm run seed:insights && npm run seed:knowledge"
+    "seed:all": "npm run seed:schema && npm run seed:dvo && npm run seed:insights && npm run seed:knowledge"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -27,6 +28,7 @@
     "bcryptjs": "^3.0.3",
     "clsx": "^2.1.1",
     "html-to-image": "^1.11.13",
+    "leaflet": "^1.9.4",
     "lucide-react": "^0.545.0",
     "next": "15.5.5",
     "next-auth": "^4.24.13",
@@ -35,6 +37,7 @@
     "postcss": "^8.5.6",
     "react": "19.1.0",
     "react-dom": "19.1.0",
+    "react-leaflet": "^5.0.0",
     "react-markdown": "^10.1.0",
     "react-syntax-highlighter": "^16.1.0",
     "recharts": "^3.6.0",

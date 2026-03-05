@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { memoryStorage } from '../../../../lib/storage/memory';
-import { geminiClient } from '../../../../lib/gemini/client';
+import { geminiClient } from '../../../../lib/ai/gemini-client';
+
 
 export async function POST(request) {
   let chatId = 'default-chat';

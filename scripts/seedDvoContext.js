@@ -5,16 +5,15 @@ import { ensureCollection, upsertPoints } from '../lib/layers/phase2-pipes/share
 import { chunkMarkdown, getEmbedding } from '../lib/layers/phase2-pipes/shared/vectorStoreService.js';
 
 /**
- * Seed Schema Context Collection
- * Loads sda_context.md and embeds to Qdrant
+ * Seed DVO Schema Context Collection
+ * Loads dvo_context.md and embeds to Qdrant collection 'schema_dvo'
  */
 
-const COLLECTION_NAME = 'schema_sda';
-const MARKDOWN_PATH = path.join(process.cwd(), 'lib', 'context', 'sda_context.md');
+const COLLECTION_NAME = 'schema_dvo';
+const MARKDOWN_PATH = path.join(process.cwd(), 'lib', 'context', 'dvo_context.md');
 
-
-async function seedSchemaContext() {
-    console.log('[Seed] Starting schema context seeding...');
+async function seedDvoContext() {
+    console.log('[Seed DVO] Starting DVO schema context seeding...');
 
     try {
         // Ensure collection exists
@@ -26,11 +25,11 @@ async function seedSchemaContext() {
         }
 
         const markdownContent = fs.readFileSync(MARKDOWN_PATH, 'utf-8');
-        console.log(`[Seed] Loaded ${markdownContent.length} chars from ${MARKDOWN_PATH}`);
+        console.log(`[Seed DVO] Loaded ${markdownContent.length} chars from ${MARKDOWN_PATH}`);
 
         // Chunk content
         const chunks = chunkMarkdown(markdownContent);
-        console.log(`[Seed] Created ${chunks.length} chunks`);
+        console.log(`[Seed DVO] Created ${chunks.length} chunks`);
 
         if (chunks.length === 0) {
             throw new Error('No chunks generated from markdown');
@@ -41,41 +40,41 @@ async function seedSchemaContext() {
 
         for (let i = 0; i < chunks.length; i++) {
             const chunk = chunks[i];
-            console.log(`[Seed] Embedding chunk ${i + 1}/${chunks.length}: ${chunk.title}`);
+            console.log(`[Seed DVO] Embedding chunk ${i + 1}/${chunks.length}: ${chunk.title}`);
 
             const embedding = await getEmbedding(chunk.content);
 
             points.push({
-                id: crypto.randomUUID(), // Use UUID for Qdrant
+                id: crypto.randomUUID(),
                 vector: embedding,
                 payload: {
-                    original_id: `schema_${chunk.id}`,
+                    original_id: `schema_dvo_${chunk.id}`,
                     title: chunk.title,
                     content: chunk.content,
                     type: 'schema',
-                    source: 'sda_context.md'
+                    source: 'dvo_context.md'
                 }
             });
         }
 
         // Upsert to Qdrant
-        console.log(`[Seed] Upserting ${points.length} points to ${COLLECTION_NAME}...`);
+        console.log(`[Seed DVO] Upserting ${points.length} points to ${COLLECTION_NAME}...`);
         await upsertPoints(COLLECTION_NAME, points);
 
-        console.log(`[Seed] ✅ Successfully seeded ${points.length} schema chunks to ${COLLECTION_NAME}`);
+        console.log(`[Seed DVO] ✅ Successfully seeded ${points.length} DVO schema chunks to ${COLLECTION_NAME}`);
 
     } catch (error) {
-        console.error('[Seed] Error seeding schema context:', error.message);
+        console.error('[Seed DVO] Error seeding DVO context:', error.message);
         process.exit(1);
     }
 }
 
 // Run if called directly
 if (import.meta.url === `file://${process.argv[1]}`) {
-    seedSchemaContext().then(() => {
-        console.log('[Seed] Schema context seeding complete');
+    seedDvoContext().then(() => {
+        console.log('[Seed DVO] DVO schema context seeding complete');
         process.exit(0);
     });
 }
 
-export { seedSchemaContext };
+export { seedDvoContext };

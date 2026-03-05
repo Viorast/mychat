@@ -1,7 +1,7 @@
 import NextAuthModule from 'next-auth';
 import CredentialsProviderModule from 'next-auth/providers/credentials';
 import GoogleProviderModule from 'next-auth/providers/google';
-import { validateCredentials, upsertGoogleUser, findUserById } from '@/lib/services/userService';
+import { validateCredentials, upsertGoogleUser, findUserById, findUserByEmail } from '@/lib/services/userService';
 
 /**
  * NextAuth Configuration
@@ -46,7 +46,12 @@ export const authOptions = {
                     throw new Error(result.error);
                 }
 
-                return result.user;
+                // Include auth_type (role) in returned user object
+                const fullUser = await findUserByEmail(credentials.email);
+                return {
+                    ...result.user,
+                    role: fullUser?.auth_type || 'user',
+                };
             }
         }),
 
@@ -90,6 +95,7 @@ export const authOptions = {
                 token.email = user.email;
                 token.name = user.name;
                 token.picture = user.image || user.avatar_url;
+                token.role = user.role || 'user';
             }
             return token;
         },
@@ -101,6 +107,7 @@ export const authOptions = {
                 session.user.email = token.email;
                 session.user.name = token.name;
                 session.user.image = token.picture;
+                session.user.role = token.role || 'user';
             }
             return session;
         },

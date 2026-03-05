@@ -9,6 +9,8 @@ import { Edit2, Check, X as XIcon, Copy, Check as CheckIcon } from 'lucide-react
 import ImageModal from '../ui/ImageModal';
 import ChartRenderer, { parseChartTag, removeChartTags } from './ChartRenderer';
 import SimpleTable, { parseTableTag, removeTableTags } from './SimpleTable';
+import MapRenderer, { parseMapTag, removeMapTags } from './MapRenderer';
+
 
 const getImageUrl = (imageData) => {
     if (!imageData) return null;
@@ -30,7 +32,7 @@ const getImageUrl = (imageData) => {
  * Parse AI message content including suggestions, charts, and tables
  */
 const parseAIContent = (content) => {
-    if (!content) return { textContent: content, suggestions: [], charts: [], tables: [] };
+    if (!content) return { textContent: content, suggestions: [], charts: [], tables: [], maps: [] };
 
     // Parse charts
     const charts = parseChartTag(content);
@@ -39,6 +41,10 @@ const parseAIContent = (content) => {
     // Parse tables
     const tables = parseTableTag(processedContent);
     processedContent = removeTableTags(processedContent);
+
+    // Parse maps
+    const maps = parseMapTag(processedContent);
+    processedContent = removeMapTags(processedContent);
 
     // Parse suggestions
     const saranMatch = processedContent.match(/\[SARAN\]:?\s*([\s\S]*)/i);
@@ -58,8 +64,9 @@ const parseAIContent = (content) => {
         }
     }
 
-    return { textContent, suggestions, charts, tables };
+    return { textContent, suggestions, charts, tables, maps };
 };
+
 
 // Legacy function for backward compatibility
 const parseSuggestions = (content) => {
@@ -83,7 +90,8 @@ export default function MessageBubble({
         ? parseAIContent(message.content)
         : { textContent: message.content, suggestions: [], charts: [], tables: [] };
 
-    const { textContent, suggestions, charts, tables } = parsedContent;
+    const { textContent, suggestions, charts, tables, maps } = parsedContent;
+
     // For backward compatibility
     const mainContent = textContent;
 
@@ -197,26 +205,64 @@ export default function MessageBubble({
                 </code>
             );
         },
-        // Typography overrides for Tailwind Prose
-        ul: ({ children }) => <ul className="list-disc pl-6 mb-4 space-y-1">{children}</ul>,
-        ol: ({ children }) => <ol className="list-decimal pl-6 mb-4 space-y-1">{children}</ol>,
-        li: ({ children }) => <li className="mb-1">{children}</li>,
+        // ─── Typography overrides ──────────────────────────────────────
+        h1: ({ children }) => (
+            <h1 className="text-xl font-bold text-gray-900 mb-3 mt-4 pb-1 border-b border-gray-200">{children}</h1>
+        ),
+        h2: ({ children }) => (
+            <h2 className="text-base font-bold text-gray-800 mb-2 mt-4 flex items-center gap-2">
+                <span className="inline-block w-1 h-4 bg-blue-500 rounded-full"></span>
+                {children}
+            </h2>
+        ),
+        h3: ({ children }) => (
+            <h3 className="text-sm font-semibold text-gray-700 mb-2 mt-3">{children}</h3>
+        ),
+        blockquote: ({ children }) => (
+            <blockquote className="border-l-4 border-blue-400 bg-blue-50 rounded-r-lg pl-4 pr-3 py-2 my-3 text-gray-700 text-sm italic">
+                {children}
+            </blockquote>
+        ),
+        hr: () => <hr className="my-4 border-gray-200" />,
+        strong: ({ children }) => <strong className="font-semibold text-gray-900">{children}</strong>,
+        em: ({ children }) => <em className="italic text-gray-600">{children}</em>,
+        ul: ({ children }) => <ul className="list-none pl-0 mb-4 space-y-1.5">{children}</ul>,
+        ol: ({ children }) => <ol className="list-decimal pl-5 mb-4 space-y-1.5 marker:text-blue-500 marker:font-semibold">{children}</ol>,
+        li: ({ children }) => (
+            <li className="flex items-start gap-2 text-sm leading-relaxed">
+                <span className="mt-1.5 flex-shrink-0 w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+                <span>{children}</span>
+            </li>
+        ),
         a: ({ href, children }) => (
             <a href={href} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline break-all">
                 {children}
             </a>
         ),
         table: ({ children }) => (
-            <div className="overflow-x-auto my-4 border rounded-lg shadow-sm">
-                <table className="min-w-full divide-y divide-gray-200">
+            <div className="overflow-x-auto my-4 rounded-xl border border-gray-200 shadow-sm">
+                <table className="min-w-full divide-y divide-gray-200 text-sm">
                     {children}
                 </table>
             </div>
         ),
-        thead: ({ children }) => <thead className="bg-gray-50">{children}</thead>,
-        th: ({ children }) => <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">{children}</th>,
-        td: ({ children }) => <td className="px-4 py-3 text-sm text-gray-700 border-t border-gray-100">{children}</td>,
-        p: ({ children }) => <p className="mb-4 last:mb-0 leading-relaxed">{children}</p>,
+        thead: ({ children }) => <thead className="bg-gradient-to-r from-blue-50 to-indigo-50">{children}</thead>,
+        th: ({ children }) => (
+            <th className="px-4 py-3 text-left text-xs font-bold text-blue-700 uppercase tracking-wider whitespace-nowrap">
+                {children}
+            </th>
+        ),
+        td: ({ children }) => (
+            <td className="px-4 py-3 text-sm text-gray-700 border-t border-gray-100 whitespace-nowrap">
+                {children}
+            </td>
+        ),
+        tr: ({ children }) => (
+            <tr className="hover:bg-gray-50 transition-colors">
+                {children}
+            </tr>
+        ),
+        p: ({ children }) => <p className="mb-3 last:mb-0 leading-relaxed text-sm">{children}</p>,
     };
 
     return (
@@ -276,7 +322,7 @@ export default function MessageBubble({
                         <>
                             <div
                                 className={`rounded-2xl px-4 py-3 shadow-sm ${isAI
-                                    ? 'bg-white border border-gray-200 text-gray-800'
+                                    ? 'bg-white border border-gray-100 text-gray-800 shadow-sm'
                                     : 'bg-blue-500 text-white'
                                     }`}
                             >
@@ -333,6 +379,18 @@ export default function MessageBubble({
                                         <SimpleTable
                                             key={idx}
                                             config={table.config}
+                                        />
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* Render Maps */}
+                            {isAI && maps.length > 0 && (
+                                <div className="mt-2">
+                                    {maps.map((map, idx) => (
+                                        <MapRenderer
+                                            key={idx}
+                                            config={map.config}
                                         />
                                     ))}
                                 </div>

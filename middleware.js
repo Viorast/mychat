@@ -30,6 +30,8 @@ export const config = {
         // Protect main chat routes
         '/',
         '/chat/:path*',
+        // Protect admin UI routes
+        '/admin/:path*',
         // Protect API routes except auth
         '/api/chat/:path*',
         '/api/groups/:path*',

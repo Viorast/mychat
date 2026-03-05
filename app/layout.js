@@ -5,6 +5,8 @@
 import { ChatProvider } from '../lib/context/ChatContext';
 import AuthProvider from '../components/auth/AuthProvider';
 import './globals.css';
+import 'leaflet/dist/leaflet.css';
+
 
 export const metadata = {
   title: 'TmaChat - AI Chat Interface',
